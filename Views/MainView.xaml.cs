@@ -1,4 +1,6 @@
-﻿using System;
+﻿using aoi_common.Events;
+using Prism.Events;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,9 +24,20 @@ namespace aoi_common.Views
     /// </summary>
     public partial class MainView
     {
-        public MainView()
+        public MainView(IEventAggregator eventAggregator)
         {
             InitializeComponent();
+            eventAggregator.GetEvent<VisionResultEvent>().Subscribe(record =>
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (record != null)
+                    {
+                        mainRecordDisplay.Record = record;
+                        mainRecordDisplay.Fit(true);
+                    }
+                });
+            });
         }
     }
 }

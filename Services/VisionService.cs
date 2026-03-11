@@ -2,6 +2,7 @@
 using Cognex.VisionPro;
 using Cognex.VisionPro.ImageFile;
 using Cognex.VisionPro.ToolBlock;
+using Cognex.VisionPro.Blob;
 using Prism.Events;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace aoi_common.Services
     {
         CogToolBlock toolBlock { get; }
         Task InitialAsync(string path);
+        void SetBlobFilter(string blobToolName, string measureType, double min, double max);
         void RunTool();
     }
 
@@ -33,8 +35,6 @@ namespace aoi_common.Services
             _imageFileTool = new CogImageFileTool();
         }
 
-
-
         public async Task InitialAsync(string path)
         {
             await Task.Run(() =>
@@ -42,12 +42,13 @@ namespace aoi_common.Services
                 string vppPath = "D:\\锂电项目\\Vm转Vp\\TB.vpp";
                 if (File.Exists(vppPath))
                 {
-                    if (toolBlock!=null)
-                        toolBlock.Ran -= toolBlock_Ran;                    
+                    if (toolBlock != null)
+                        toolBlock.Ran -= toolBlock_Ran;
                     toolBlock = (CogToolBlock)CogSerializer.LoadObjectFromFile(vppPath);
                     toolBlock.Ran += toolBlock_Ran;
                     string imagePath = "D:\\锂电项目\\Vm转Vp\\coins.idb";
                     _imageFileTool.Operator.Open(imagePath, CogImageFileModeConstants.Read);
+                    SetBlobFilter("CogBlobTool1", "Area", 5100, 9100);
 
                 }
             });
@@ -67,7 +68,7 @@ namespace aoi_common.Services
                 displayRecord = toolBlock.Tools[0].CreateLastRunRecord();
                 if (displayRecord.SubRecords.Count > 0)
                 {
-                    displayRecord = displayRecord.SubRecords.Count > 1 ? displayRecord.SubRecords[1] : displayRecord.SubRecords[0];
+                    displayRecord = displayRecord.SubRecords.Count > 1 ? displayRecord.SubRecords[2] : displayRecord.SubRecords[0];
                 }
             }
             else
@@ -86,7 +87,33 @@ namespace aoi_common.Services
             {
                 toolBlock.Inputs["Image"].Value = currentImage;
             }
+            
+            //int num = toolBlock.Tools["CogBlobTool1"].DataBindings.Count;
+
+            //CogBlobTool tool = toolBlock.Tools["CogBlobTool1"] as CogBlobTool ;
+            //var items = tool.RunParams.RunTimeMeasures;
+            //var db = toolBlock.Tools["CogBlobTool1"].DataBindings[1].DestinationPath; //"RunParams.RunTimeMeasures.Item[0].FilterRangeHigh"
+            //var vvv = toolBlock.Tools.Contains(db);
             toolBlock.Run();
+        }
+
+        public void SetBlobFilter(string blobToolName, string measureType, double min, double max)
+        {
+            var blobTool = toolBlock.Tools[blobToolName] as CogBlobTool;
+            if (blobTool == null) return;
+            var measures = blobTool.RunParams.RunTimeMeasures;
+
+            for (int i = 0; i < measures.Count; i++)
+            {
+                // 匹配 Measure 属性，例如 "Area"
+                if (measures[i].Measure.ToString().Contains(measureType))
+                {
+                    measures[i].FilterRangeLow = min;
+                    measures[i].FilterRangeHigh = max;
+                    measures[i].Mode = CogBlobMeasureModeConstants.Filter; // 确保开启了过滤模式
+                    break;
+                }
+            }            
         }
     }
 }

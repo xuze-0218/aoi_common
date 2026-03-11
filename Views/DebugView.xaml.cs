@@ -22,13 +22,14 @@ namespace aoi_common.Views
     /// </summary>
     public partial class DebugView : UserControl
     {
-        public DebugView(VisionService visionService)
+        public DebugView(IVisionService visionService)
         {
             InitializeComponent();
             if (visionService.toolBlock!=null)
             {
                 toolBlockEditV2.Subject = visionService.toolBlock;
             }
+            this.Unloaded += (s, e) => { toolBlockEditV2.Subject = null; };
         }
     }
 }
