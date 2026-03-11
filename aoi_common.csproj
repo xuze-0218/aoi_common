@@ -155,9 +155,9 @@
     <Compile Include="Events\VisionResultEvent.cs" />
     <Compile Include="Services\VisionService.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\RunViewModel.cs" />
-    <Compile Include="Views\RunView.xaml.cs">
-      <DependentUpon>RunView.xaml</DependentUpon>
+    <Compile Include="ViewModels\DebugViewModel.cs" />
+    <Compile Include="Views\DebugView.xaml.cs">
+      <DependentUpon>DebugView.xaml</DependentUpon>
     </Compile>
     <Page Include="Views\MainView.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -171,7 +171,7 @@
       <DependentUpon>MainView.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Views\RunView.xaml">
+    <Page Include="Views\DebugView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

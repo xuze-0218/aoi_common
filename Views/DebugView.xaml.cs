@@ -1,4 +1,5 @@
-﻿using aoi_common.ViewModels;
+﻿using aoi_common.Services;
+using aoi_common.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,23 +20,15 @@ namespace aoi_common.Views
     /// <summary>
     /// RunView.xaml 的交互逻辑
     /// </summary>
-    public partial class RunView : UserControl
+    public partial class DebugView : UserControl
     {
-        public RunView()
+        public DebugView(VisionService visionService)
         {
             InitializeComponent();
-
-            this.DataContextChanged += (s,e)=> 
+            if (visionService.toolBlock!=null)
             {
-                if (this.DataContext is RunViewModel vm)
-                {
-                    vm.OnRecordUpdated = record =>
-                    {
-                        cogRecordDisplay.Record = record;
-                        cogRecordDisplay.Fit(true);
-                    };
-                }
-            };
+                toolBlockEditV2.Subject = visionService.toolBlock;
+            }
         }
     }
 }

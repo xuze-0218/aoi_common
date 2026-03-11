@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace aoi_common.ViewModels
 {
-    public class RunViewModel:BindableBase
+    public class DebugViewModel:BindableBase
     {
         public Action<ICogRecord> OnRecordUpdated;
 
-        public RunViewModel(IEventAggregator eventAggregator)
+        public DebugViewModel(IEventAggregator eventAggregator)
         {
             eventAggregator.GetEvent<VisionResultEvent>().Subscribe(record => 
             {

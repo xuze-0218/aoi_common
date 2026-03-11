@@ -15,21 +15,26 @@ namespace aoi_common.Services
 
     public interface IVisionService
     {
+        CogToolBlock toolBlock { get; }
         Task InitialAsync(string path);
         void RunTool();
     }
 
-    internal class VisionService : IVisionService
+    public class VisionService : IVisionService
     {
-        private CogToolBlock _toolBlock;
+
         private CogImageFileTool _imageFileTool;
         private IEventAggregator _eventAggregator;
+        public CogToolBlock toolBlock { get; private set; }
 
         public VisionService(IEventAggregator eventAggregator)
         {
             _eventAggregator = eventAggregator;
             _imageFileTool = new CogImageFileTool();
         }
+
+
+
         public async Task InitialAsync(string path)
         {
             await Task.Run(() =>
@@ -37,7 +42,10 @@ namespace aoi_common.Services
                 string vppPath = "D:\\锂电项目\\Vm转Vp\\TB.vpp";
                 if (File.Exists(vppPath))
                 {
-                    _toolBlock = (CogToolBlock)CogSerializer.LoadObjectFromFile(vppPath);
+                    if (toolBlock!=null)
+                        toolBlock.Ran -= toolBlock_Ran;                    
+                    toolBlock = (CogToolBlock)CogSerializer.LoadObjectFromFile(vppPath);
+                    toolBlock.Ran += toolBlock_Ran;
                     string imagePath = "D:\\锂电项目\\Vm转Vp\\coins.idb";
                     _imageFileTool.Operator.Open(imagePath, CogImageFileModeConstants.Read);
 
@@ -45,34 +53,40 @@ namespace aoi_common.Services
             });
         }
 
-        public void RunTool()
+        private void toolBlock_Ran(object sender, EventArgs e)
         {
-            if (_toolBlock == null) return;
-            _imageFileTool.Run();
-            ICogImage currentImage = _imageFileTool.OutputImage;
-            if (_toolBlock.Inputs.Contains("Image"))
-            {
-                _toolBlock.Inputs["Image"].Value = currentImage;
-            }
+            UpdateDisplayRecord();
+        }
 
-            _toolBlock.Run();
+        private void UpdateDisplayRecord()
+        {
+            if (toolBlock == null) return;
             ICogRecord displayRecord = null;
-            if (_toolBlock.Tools.Count > 0)
+            if (toolBlock.Tools.Count > 0)
             {
-                displayRecord = _toolBlock.Tools[0].CreateLastRunRecord();
-                if (displayRecord.SubRecords.Count>0)
+                displayRecord = toolBlock.Tools[0].CreateLastRunRecord();
+                if (displayRecord.SubRecords.Count > 0)
                 {
-                    displayRecord = displayRecord.SubRecords[1];
+                    displayRecord = displayRecord.SubRecords.Count > 1 ? displayRecord.SubRecords[1] : displayRecord.SubRecords[0];
                 }
-
             }
             else
             {
-                displayRecord = _toolBlock.CreateLastRunRecord();
+                displayRecord = toolBlock.CreateLastRunRecord();
             }
-
             _eventAggregator.GetEvent<VisionResultEvent>().Publish(displayRecord);
+        }
 
+        public void RunTool()
+        {
+            if (toolBlock == null) return;
+            _imageFileTool.Run();
+            ICogImage currentImage = _imageFileTool.OutputImage;
+            if (toolBlock.Inputs.Contains("Image"))
+            {
+                toolBlock.Inputs["Image"].Value = currentImage;
+            }
+            toolBlock.Run();
         }
     }
 }
