@@ -93,6 +93,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Demo\dll\Cognex.VisionPro.ImageFile.Controls.dll</HintPath>
     </Reference>
+    <Reference Include="Cognex.VisionPro.PMAlign, Version=91.0.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Demo\dll\Cognex.VisionPro.PMAlign.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.PMAlign.Controls, Version=91.0.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Demo\dll\Cognex.VisionPro.PMAlign.Controls.dll</HintPath>
+    </Reference>
     <Reference Include="Cognex.VisionPro.ToolGroup, Version=91.0.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Demo\dll\Cognex.VisionPro.ToolGroup.dll</HintPath>
@@ -115,6 +123,9 @@
     </Reference>
     <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Xaml.Behaviors.Wpf.1.1.122\lib\net462\Microsoft.Xaml.Behaviors.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Prism, Version=7.2.0.1422, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
       <HintPath>packages\Prism.Core.7.2.0.1422\lib\net45\Prism.dll</HintPath>
@@ -161,11 +172,16 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Events\VisionResultEvent.cs" />
+    <Compile Include="Models\ConfigParam.cs" />
     <Compile Include="Services\VisionService.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\DebugViewModel.cs" />
+    <Compile Include="ViewModels\ParamConfigViewModel.cs" />
     <Compile Include="Views\DebugView.xaml.cs">
       <DependentUpon>DebugView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ParamConfigView.xaml.cs">
+      <DependentUpon>ParamConfigView.xaml</DependentUpon>
     </Compile>
     <Page Include="Views\MainView.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -180,6 +196,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\DebugView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ParamConfigView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

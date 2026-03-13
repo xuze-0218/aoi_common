@@ -27,6 +27,7 @@ namespace aoi_common
         {
             containerRegistry.RegisterSingleton<IVisionService, VisionService>();
             containerRegistry.RegisterDialog<DebugView, DebugViewModel>();
+            containerRegistry.RegisterDialog<ParamConfigView,ParamConfigViewModel>();
         }
 
 

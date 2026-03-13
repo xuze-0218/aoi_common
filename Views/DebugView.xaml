@@ -8,17 +8,21 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:vproEdit="clr-namespace:Cognex.VisionPro.ToolBlock;assembly=Cognex.VisionPro.ToolGroup.Controls"
-    d:DesignHeight="500"
-    d:DesignWidth="1000"
     prism:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
-    <Grid Background="AliceBlue">
+    <Grid
+        MinWidth="1200"
+        MinHeight="800"
+        Background="AliceBlue">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <WindowsFormsHost>
+        <WindowsFormsHost
+            Margin="2"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
             <vproEdit:CogToolBlockEditV2 x:Name="toolBlockEditV2" />
         </WindowsFormsHost>
 

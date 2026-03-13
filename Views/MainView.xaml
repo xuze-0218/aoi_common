@@ -21,7 +21,8 @@
 
         <Menu Grid.Row="0">
             <MenuItem Header="配置">
-                <MenuItem Command="{Binding OpenDebugCommand}" Header="在线参数调试" />
+                <MenuItem Command="{Binding OpenDebugCommand}" Header="程序调试" />
+                <MenuItem Command="{Binding ParaDebugCommand}" Header="参数配置" />
             </MenuItem>
         </Menu>
 

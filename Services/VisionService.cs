@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Cognex.VisionPro.PMAlign;
 
 namespace aoi_common.Services
 {
@@ -48,7 +49,7 @@ namespace aoi_common.Services
                     toolBlock.Ran += toolBlock_Ran;
                     string imagePath = "D:\\锂电项目\\Vm转Vp\\coins.idb";
                     _imageFileTool.Operator.Open(imagePath, CogImageFileModeConstants.Read);
-                    SetBlobFilter("CogBlobTool1", "Area", 5100, 9100);
+                    //SetBlobFilter("CogBlobTool1", "Area", 5100, 9100);
 
                 }
             });
@@ -99,7 +100,12 @@ namespace aoi_common.Services
 
         public void SetBlobFilter(string blobToolName, string measureType, double min, double max)
         {
+            CogPMAlignTool  pMAlignTool = toolBlock.Tools[blobToolName] as CogPMAlignTool;
+            //pMAlignTool.RunParams.ApproximateNumberToFind
             var blobTool = toolBlock.Tools[blobToolName] as CogBlobTool;
+            //blobTool.RunParams.RegionMode
+            //pMAlignTool.RunParams.EdgeThreshold;
+            //pMAlignTool.RunParams.
             if (blobTool == null) return;
             var measures = blobTool.RunParams.RunTimeMeasures;
 
