@@ -6,7 +6,7 @@ using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel; // 必须引用，用于分组排序
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;

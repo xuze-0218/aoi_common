@@ -20,6 +20,7 @@ namespace aoi_common.Services
         CogToolBlock toolBlock { get; }
         Task InitialAsync(string path);
         void SetBlobFilter(string blobToolName, string measureType, double min, double max);
+        void ChangeImagePath(string imagePath);
         void RunTool();
     }
 
@@ -40,14 +41,14 @@ namespace aoi_common.Services
         {
             await Task.Run(() =>
             {
-                string vppPath = "D:\\锂电项目\\Vm转Vp\\TB.vpp";
-                if (File.Exists(vppPath))
+                //string vppPath = "C:\\Users\\xuze\\Desktop\\testvpp.vpp";
+                if (File.Exists(path))
                 {
                     if (toolBlock != null)
                         toolBlock.Ran -= toolBlock_Ran;
-                    toolBlock = (CogToolBlock)CogSerializer.LoadObjectFromFile(vppPath);
+                    toolBlock = (CogToolBlock)CogSerializer.LoadObjectFromFile(path);
                     toolBlock.Ran += toolBlock_Ran;
-                    string imagePath = "D:\\锂电项目\\Vm转Vp\\coins.idb";
+                    string imagePath = "C:\\Users\\xuze\\Desktop\\test\\14184680-贴胶后1贴条胶+面胶.bmp";
                     _imageFileTool.Operator.Open(imagePath, CogImageFileModeConstants.Read);
                     //SetBlobFilter("CogBlobTool1", "Area", 5100, 9100);
 
@@ -64,19 +65,35 @@ namespace aoi_common.Services
         {
             if (toolBlock == null) return;
             ICogRecord displayRecord = null;
-            if (toolBlock.Tools.Count > 0)
+            //if (toolBlock.Tools.Count > 0)
+            //{
+            //    displayRecord = toolBlock.Tools[0].CreateLastRunRecord();
+            //    if (displayRecord.SubRecords.Count > 0)
+            //    {
+            //        displayRecord = displayRecord.SubRecords.Count > 1 ? displayRecord.SubRecords[2] : displayRecord.SubRecords[0];
+            //    }
+            //}
+            //else
             {
-                displayRecord = toolBlock.Tools[0].CreateLastRunRecord();
-                if (displayRecord.SubRecords.Count > 0)
-                {
-                    displayRecord = displayRecord.SubRecords.Count > 1 ? displayRecord.SubRecords[2] : displayRecord.SubRecords[0];
-                }
-            }
-            else
-            {
-                displayRecord = toolBlock.CreateLastRunRecord();
+                displayRecord = toolBlock.CreateLastRunRecord().SubRecords[0];
             }
             _eventAggregator.GetEvent<VisionResultEvent>().Publish(displayRecord);
+        }
+
+        public void ChangeImagePath(string imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath) || !File.Exists(imagePath)) return;
+
+            try
+            {
+                _imageFileTool.Operator.Close();
+                _imageFileTool.Operator.Open(imagePath, CogImageFileModeConstants.Read);
+                // RunTool();                 // 运行一次，以便界面刷新
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"切换图片失败: {ex.Message}");
+            }
         }
 
         public void RunTool()
@@ -88,7 +105,7 @@ namespace aoi_common.Services
             {
                 toolBlock.Inputs["Image"].Value = currentImage;
             }
-            
+
             //int num = toolBlock.Tools["CogBlobTool1"].DataBindings.Count;
 
             //CogBlobTool tool = toolBlock.Tools["CogBlobTool1"] as CogBlobTool ;
@@ -100,7 +117,7 @@ namespace aoi_common.Services
 
         public void SetBlobFilter(string blobToolName, string measureType, double min, double max)
         {
-            CogPMAlignTool  pMAlignTool = toolBlock.Tools[blobToolName] as CogPMAlignTool;
+            CogPMAlignTool pMAlignTool = toolBlock.Tools[blobToolName] as CogPMAlignTool;
             //pMAlignTool.RunParams.ApproximateNumberToFind
             var blobTool = toolBlock.Tools[blobToolName] as CogBlobTool;
             //blobTool.RunParams.RegionMode
@@ -119,7 +136,7 @@ namespace aoi_common.Services
                     measures[i].Mode = CogBlobMeasureModeConstants.Filter; // 确保开启了过滤模式
                     break;
                 }
-            }            
+            }
         }
     }
 }

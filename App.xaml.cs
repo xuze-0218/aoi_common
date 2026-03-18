@@ -25,9 +25,11 @@ namespace aoi_common
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            containerRegistry.RegisterSingleton<ICommunicationService,CommunicationService>();
             containerRegistry.RegisterSingleton<IVisionService, VisionService>();
             containerRegistry.RegisterDialog<DebugView, DebugViewModel>();
             containerRegistry.RegisterDialog<ParamConfigView,ParamConfigViewModel>();
+            containerRegistry.RegisterDialog<CommunicationView,CommunicationViewModel>();
         }
 
 
@@ -37,7 +39,7 @@ namespace aoi_common
             //优化WinForm控件的视觉样式
             System.Windows.Forms.Application.EnableVisualStyles();
             var visionservice = Container.Resolve<IVisionService>();
-            Task.Run(async () => await visionservice.InitialAsync("D:\\锂电项目\\VisionProTool-main\\VppData\\溢胶评估\\vpp\\溢胶评估.vpp"));
+            Task.Run(async () => await visionservice.InitialAsync("C:\\Users\\xuze\\Desktop\\testvpp.vpp"));
         }
     }
 }

@@ -172,17 +172,27 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Events\VisionResultEvent.cs" />
+    <Compile Include="Models\CommunicationModel.cs" />
     <Compile Include="Models\ConfigParam.cs" />
+    <Compile Include="Services\ICommunicationService.cs" />
     <Compile Include="Services\VisionService.cs" />
+    <Compile Include="ViewModels\CommunicationViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\DebugViewModel.cs" />
     <Compile Include="ViewModels\ParamConfigViewModel.cs" />
+    <Compile Include="Views\CommunicationView.xaml.cs">
+      <DependentUpon>CommunicationView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\DebugView.xaml.cs">
       <DependentUpon>DebugView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ParamConfigView.xaml.cs">
       <DependentUpon>ParamConfigView.xaml</DependentUpon>
     </Compile>
+    <Page Include="Views\CommunicationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
