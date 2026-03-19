@@ -205,8 +205,12 @@
     <Compile Include="Events\VisionResultEvent.cs" />
     <Compile Include="Models\CommunicationModel.cs" />
     <Compile Include="Models\ConfigParam.cs" />
+    <Compile Include="Models\DetectCode.cs" />
+    <Compile Include="Models\DetectionResult.cs" />
     <Compile Include="Models\LogEventModel.cs" />
     <Compile Include="Services\ICommunicationService.cs" />
+    <Compile Include="Services\IConfigService.cs" />
+    <Compile Include="Services\IDetectionLogicService.cs" />
     <Compile Include="Services\VisionService.cs" />
     <Compile Include="ViewModels\CommunicationViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
@@ -263,6 +267,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

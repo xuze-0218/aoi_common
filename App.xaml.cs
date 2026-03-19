@@ -28,6 +28,8 @@ namespace aoi_common
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             containerRegistry.RegisterSingleton<ICommunicationService, CommunicationService>();
+            containerRegistry.RegisterSingleton<IDetectionLogicService, DetectionLogicService>();
+            containerRegistry.RegisterSingleton<IConfigService, ConfigService>();
             containerRegistry.RegisterSingleton<IVisionService, VisionService>();
             containerRegistry.RegisterDialog<DebugView, DebugViewModel>();
             containerRegistry.RegisterDialog<ParamConfigView, ParamConfigViewModel>();

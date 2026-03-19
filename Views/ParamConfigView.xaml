@@ -23,7 +23,7 @@
                             Background="#F2F2F2"
                             BorderBrush="#CCCCCC"
                             BorderThickness="0,0,0,1"
-                            IsExpanded="True">
+                            IsExpanded="{Binding IsExpanded}">
                             <Expander.Header>
                                 <StackPanel Margin="5,2" Orientation="Horizontal">
                                     <TextBlock

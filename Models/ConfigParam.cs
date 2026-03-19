@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace aoi_common.Models
 {
-
     public enum ParamOutputType
     {
         INT,
@@ -16,7 +15,6 @@ namespace aoi_common.Models
         BOOL,
         STRING
     }
-
     public class ConfigParam : BindableBase
     {
         private string _name;
@@ -42,8 +40,6 @@ namespace aoi_common.Models
             set { _moduleName = value; }
         }
     }
-
-
     public class ConfigModuleGroup : BindableBase
     {
         private string _moduleName;
@@ -53,7 +49,7 @@ namespace aoi_common.Models
             set => SetProperty(ref _moduleName, value);
         }
 
-        private bool _isExpanded = true; // 默认展开
+        private bool _isExpanded = false; // 默认展开
         public bool IsExpanded
         {
             get => _isExpanded;

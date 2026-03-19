@@ -18,6 +18,7 @@ namespace aoi_common.Services
 
     public interface IVisionService
     {
+        bool IsInitialized { get; }
         CogToolBlock toolBlock { get; }
         Task InitialAsync(string path);
         void SetBlobFilter(string blobToolName, string measureType, double min, double max);
@@ -27,6 +28,8 @@ namespace aoi_common.Services
 
     public class VisionService : IVisionService
     {
+        private bool _isInitialized;
+        public bool IsInitialized => _isInitialized;
         private readonly ILogger _logger;
         private CogImageFileTool _imageFileTool;
         private IEventAggregator _eventAggregator;
@@ -41,6 +44,7 @@ namespace aoi_common.Services
 
         public async Task InitialAsync(string path)
         {
+            _isInitialized = false;
             _logger.Information("开始初始化...");
             await Task.Run(() =>
             {
@@ -49,7 +53,10 @@ namespace aoi_common.Services
                 {
                     if (toolBlock != null)
                         toolBlock.Ran -= toolBlock_Ran;
+                    Log.Warning("Vpp正在初始化，请等待");
                     toolBlock = (CogToolBlock)CogSerializer.LoadObjectFromFile(path);
+                    _isInitialized =true;
+             
                     toolBlock.Ran += toolBlock_Ran;
                     string imagePath = "C:\\Users\\xuze\\Desktop\\test\\14184680-贴胶后1贴条胶+面胶.bmp";
                     _imageFileTool.Operator.Open(imagePath, CogImageFileModeConstants.Read);

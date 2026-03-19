@@ -14,6 +14,7 @@ namespace aoi_common.ViewModels
     public class DebugViewModel : BindableBase, IDialogAware
     {
         public string Title => "调试窗口";
+
         public event Action<IDialogResult> RequestClose;
         public bool CanCloseDialog() => true;
         public void OnDialogClosed() { }

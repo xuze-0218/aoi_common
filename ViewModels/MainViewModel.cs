@@ -32,9 +32,21 @@ namespace aoi_common.ViewModels
         {
             _visionService = visionService;
             _dialogService = dialogService;
-            OpenDebugCommand = new DelegateCommand(() => { _dialogService.Show("DebugView", new DialogParameters(), r => { }); });
-            ParaDebugCommand = new DelegateCommand(() => { _dialogService.Show("ParamConfigView", new DialogParameters(), r => { }); });
-            CommunicateDebugCommand = new DelegateCommand(() => { _dialogService.Show("CommunicationView", new DialogParameters(), r => { }); });
+            OpenDebugCommand = new DelegateCommand(() =>
+            {
+                if (!_visionService.IsInitialized)
+                {
+                   
+                    return;
+                }
+                _dialogService.Show("DebugView",
+                    new DialogParameters(), r => { });
+            }, () => _visionService.IsInitialized);
+            ParaDebugCommand = new DelegateCommand
+                (() => { _dialogService.Show("ParamConfigView", new DialogParameters(), r => { }); });
+
+            CommunicateDebugCommand = new DelegateCommand
+                (() => { _dialogService.Show("CommunicationView", new DialogParameters(), r => { }); });
 
             ImportImageCommand = new DelegateCommand(() =>
             {
@@ -48,10 +60,22 @@ namespace aoi_common.ViewModels
 
             RunCommand = new DelegateCommand(() =>
             {
-                
+
                 _visionService.RunTool();
             });
+            MonitorStatus();
             Log.Information("AOI 系统主界面加载完成。");
+        }
+
+        private async void MonitorStatus()
+        {
+            while (!_visionService.IsInitialized)
+            {
+                await Task.Delay(500);
+            }
+            OpenDebugCommand.RaiseCanExecuteChanged();
+            //ParaDebugCommand.RaiseCanExecuteChanged();
+            Log.Information("Vpp初始化完成，可打开调试窗口查看");
         }
     }
 }
