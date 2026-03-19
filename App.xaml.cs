@@ -33,7 +33,7 @@ namespace aoi_common
             containerRegistry.RegisterDialog<ParamConfigView, ParamConfigViewModel>();
             containerRegistry.RegisterDialog<CommunicationView, CommunicationViewModel>();
 
-            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().Enrich.FromLogContext()
+            Log.Logger = new LoggerConfiguration().MinimumLevel.Information().Enrich.FromLogContext()
                 .WriteTo.Async(a => a.File("Logs/log_.txt",
                 rollingInterval: RollingInterval.Day,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",

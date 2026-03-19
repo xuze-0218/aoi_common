@@ -47,7 +47,7 @@ namespace aoi_common.Common
                 {
                     Timestamp = logEvent.Timestamp.ToString("HH:mm:ss.fff"),
                     Level = level,
-                    Message = message,
+                    Message = $"[{message}] {logEvent.RenderMessage()}",
                     Color = color
                 });
             }));

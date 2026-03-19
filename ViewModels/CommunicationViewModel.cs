@@ -3,6 +3,7 @@ using aoi_common.Services;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,6 +16,7 @@ namespace aoi_common.ViewModels
     public class CommunicationViewModel:BindableBase, IDialogAware
     {
         private readonly ICommunicationService _service;
+        private readonly ILogger _logger;
         public ObservableCollection<string> Logs { get; } = new ObservableCollection<string>();
 
         private string _ip = "127.0.0.1";

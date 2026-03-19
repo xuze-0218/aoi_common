@@ -54,7 +54,7 @@
                         SelectedItem="{Binding SelectedRole}" />
                 </StackPanel>
                 <StackPanel Margin="5">
-                    <TextBlock Text="IP地址 (Client用):" />
+                    <TextBlock Text="IP地址:" />
                     <TextBox Width="120" Text="{Binding Ip}" />
                 </StackPanel>
                 <StackPanel Margin="5">
