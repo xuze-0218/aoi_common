@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Cognex.VisionPro.PMAlign;
+using Serilog;
 
 namespace aoi_common.Services
 {
@@ -26,19 +27,21 @@ namespace aoi_common.Services
 
     public class VisionService : IVisionService
     {
-
+        private readonly ILogger _logger;
         private CogImageFileTool _imageFileTool;
         private IEventAggregator _eventAggregator;
         public CogToolBlock toolBlock { get; private set; }
 
-        public VisionService(IEventAggregator eventAggregator)
+        public VisionService(IEventAggregator eventAggregator, ILogger logger)
         {
+            _logger = logger;
             _eventAggregator = eventAggregator;
             _imageFileTool = new CogImageFileTool();
         }
 
         public async Task InitialAsync(string path)
         {
+            _logger.Information("开始初始化...");
             await Task.Run(() =>
             {
                 //string vppPath = "C:\\Users\\xuze\\Desktop\\testvpp.vpp";
@@ -92,6 +95,7 @@ namespace aoi_common.Services
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "检测过程发生崩溃");
                 System.Diagnostics.Debug.WriteLine($"切换图片失败: {ex.Message}");
             }
         }

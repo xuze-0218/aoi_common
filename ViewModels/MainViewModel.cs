@@ -1,10 +1,15 @@
-﻿using aoi_common.Services;
+﻿using aoi_common.Common;
+using aoi_common.Models;
+using aoi_common.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Regions;
 using Prism.Services.Dialogs;
+using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +21,7 @@ namespace aoi_common.ViewModels
     {
         private readonly IVisionService _visionService;
         private readonly IDialogService _dialogService;
-
+        public ObservableCollection<LogEventModel> LogSource => UiLogSink.LogCollection;
         public DelegateCommand OpenDebugCommand { get; }
         public DelegateCommand ParaDebugCommand { get; }
         public DelegateCommand CommunicateDebugCommand { get; }
@@ -46,6 +51,7 @@ namespace aoi_common.ViewModels
                 
                 _visionService.RunTool();
             });
+            Log.Information("AOI 系统主界面加载完成。");
         }
     }
 }

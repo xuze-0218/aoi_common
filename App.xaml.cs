@@ -1,8 +1,10 @@
-﻿using aoi_common.Services;
+﻿using aoi_common.Common;
+using aoi_common.Services;
 using aoi_common.ViewModels;
 using aoi_common.Views;
 using Prism.DryIoc;
 using Prism.Ioc;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -20,16 +22,24 @@ namespace aoi_common
     {
         protected override Window CreateShell()
         {
-           return Container.Resolve<MainView>();
+            return Container.Resolve<MainView>();
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            containerRegistry.RegisterSingleton<ICommunicationService,CommunicationService>();
+            containerRegistry.RegisterSingleton<ICommunicationService, CommunicationService>();
             containerRegistry.RegisterSingleton<IVisionService, VisionService>();
             containerRegistry.RegisterDialog<DebugView, DebugViewModel>();
-            containerRegistry.RegisterDialog<ParamConfigView,ParamConfigViewModel>();
-            containerRegistry.RegisterDialog<CommunicationView,CommunicationViewModel>();
+            containerRegistry.RegisterDialog<ParamConfigView, ParamConfigViewModel>();
+            containerRegistry.RegisterDialog<CommunicationView, CommunicationViewModel>();
+
+            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().Enrich.FromLogContext()
+                .WriteTo.Async(a => a.File("Logs/log_.txt",
+                rollingInterval: RollingInterval.Day,
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+                retainedFileCountLimit: 30)).WriteTo.Sink(new UiLogSink()).CreateLogger();
+
+            containerRegistry.RegisterInstance<ILogger>(Log.Logger);
         }
 
 
