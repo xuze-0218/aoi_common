@@ -54,6 +54,8 @@ namespace aoi_common
         protected override async void OnInitialized()
         {
             base.OnInitialized();
+            //优化WinForm控件的视觉样式
+            System.Windows.Forms.Application.EnableVisualStyles();
             try
             {
                 var startupService = Container.Resolve<IApplicationStartupService>();
@@ -65,8 +67,7 @@ namespace aoi_common
                 MessageBox.Show("应用初始化失败: " + ex.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
             }
-            //优化WinForm控件的视觉样式
-            System.Windows.Forms.Application.EnableVisualStyles();
+
             var visionservice = Container.Resolve<IVisionService>();
             await Task.Run(async () => await visionservice.InitialAsync("C:\\Users\\xuze\\Desktop\\testvpp.vpp"));
         }
