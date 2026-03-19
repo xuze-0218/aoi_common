@@ -1,0 +1,40 @@
+﻿<UserControl
+    x:Class="aoi_common.Views.CameraDebugView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cog="clr-namespace:Cognex.VisionPro;assembly=Cognex.VisionPro.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:aoi_common.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Grid Background="White" Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 状态和按钮 -->
+        <StackPanel Grid.Row="0" Orientation="Vertical" Margin="0,0,0,10">
+            <TextBlock Text="相机调试界面" FontSize="16" FontWeight="Bold"/>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="Green" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- CogAcqFifoEditV2控件 -->
+        <WindowsFormsHost Grid.Row="1" x:Name="windowsFormsHost" UseLayoutRounding="True">
+            <cog:CogAcqFifoEditV2 x:Name="cogAcqFifoEditV2" Subject="{Binding CurrentCogAcqFifoTool }" />
+        </WindowsFormsHost>
+
+        <!-- 按钮区域 -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="加载配置" Command="{Binding LoadConfigCommand}" 
+                    Padding="10,5" Margin="0,0,10,0" Background="#007ACC" Foreground="White"/>
+            <Button Content="保存配置" Command="{Binding SaveConfigCommand}" 
+                    Padding="10,5" Margin="0,0,10,0" Background="#107C10" Foreground="White"/>
+            <Button Content="重新加载默认" Command="{Binding ReloadDefaultCommand}" 
+                    Padding="10,5" Background="#FFB900" Foreground="Black"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

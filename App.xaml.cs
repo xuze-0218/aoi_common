@@ -27,10 +27,16 @@ namespace aoi_common
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            // 注册相机配置服务
+            containerRegistry.RegisterSingleton<ICameraConfigService, CameraConfigService>();
             containerRegistry.RegisterSingleton<ICommunicationService, CommunicationService>();
             containerRegistry.RegisterSingleton<IDetectionLogicService, DetectionLogicService>();
             containerRegistry.RegisterSingleton<IConfigService, ConfigService>();
+            // 注册Vision服务
             containerRegistry.RegisterSingleton<IVisionService, VisionService>();
+            // 注册应用启动服务
+            containerRegistry.RegisterSingleton<IApplicationStartupService, ApplicationStartupService>();
+            containerRegistry.RegisterForNavigation<CameraDebugView, CameraDebugViewModel>();
             containerRegistry.RegisterDialog<DebugView, DebugViewModel>();
             containerRegistry.RegisterDialog<ParamConfigView, ParamConfigViewModel>();
             containerRegistry.RegisterDialog<CommunicationView, CommunicationViewModel>();
@@ -45,13 +51,42 @@ namespace aoi_common
         }
 
 
-        protected override void OnInitialized()
+        protected override async void OnInitialized()
         {
             base.OnInitialized();
+            try
+            {
+                var startupService = Container.Resolve<IApplicationStartupService>();
+                await startupService.InitializeAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "应用启动失败");
+                MessageBox.Show("应用初始化失败: " + ex.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown();
+            }
             //优化WinForm控件的视觉样式
             System.Windows.Forms.Application.EnableVisualStyles();
             var visionservice = Container.Resolve<IVisionService>();
-            Task.Run(async () => await visionservice.InitialAsync("C:\\Users\\xuze\\Desktop\\testvpp.vpp"));
+            await Task.Run(async () => await visionservice.InitialAsync("C:\\Users\\xuze\\Desktop\\testvpp.vpp"));
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            base.OnExit(e);
+
+            // 应用关闭时保存配置
+            try
+            {
+                var startupService = Container.Resolve<IApplicationStartupService>();
+                startupService.ShutdownAsync().Wait();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "应用关闭时保存配置失败");
+            }
+
+            Log.CloseAndFlush();
         }
     }
 }
