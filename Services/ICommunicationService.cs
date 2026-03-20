@@ -59,7 +59,7 @@ namespace aoi_common.Services
             _targetIp = ip;
             _targetPort = port;
             _cts = new CancellationTokenSource();
-            IsActive = true;
+           
             try
             {
                 if (protocol == CommProtocol.TCP)
@@ -71,6 +71,7 @@ namespace aoi_common.Services
                 {
                     StartUdp(role, ip, port);
                 }
+                IsActive = true;
             }
             catch (Exception ex)
             {
@@ -139,6 +140,20 @@ namespace aoi_common.Services
                     try
                     {
                         var client = await _tcpServer.AcceptTcpClientAsync();
+
+                        if (!IsActive)
+                        {
+                            IsActive = true;
+                            ConnectionStatusChanged?.Invoke(true);  // 通知UI
+                            _logger.Information("[TCP Server]客户端已接入，连接激活");
+                        }
+                        else
+                        {
+                            client.Close();
+                            _logger.Warning("[TCP Server]已有活跃连接，拒绝新连接");
+                            continue;
+                        }
+
                         _ = Task.Run(() => HandleTcpConnection(client, _cts.Token));
                     }
                     catch { break; }
@@ -165,6 +180,7 @@ namespace aoi_common.Services
                             if (await Task.WhenAny(connectTask, Task.Delay(5000)) == connectTask)
                             {
                                 await connectTask;
+                                IsActive = true;
                                 _logger.Information("[TCP Client] 连接成功");
                                 await HandleTcpClientReceive(_cts.Token);
                             }
@@ -179,7 +195,7 @@ namespace aoi_common.Services
                         _logger.Error($"[TCP Client] 错误: {ex.Message}，5秒后重试...");
                     }
 
-                    await Task.Delay(5000, _cts.Token); // 重连间隔
+                    await Task.Delay(5000, _cts.Token);
                 }
             }, _cts.Token);
         }
@@ -230,6 +246,8 @@ namespace aoi_common.Services
             }
             finally
             {
+                IsActive = false;
+                ConnectionStatusChanged?.Invoke(false);
                 RaiseLogMessage($"[TCP Server] 客户端已断开: {remote}");
                 _logger.Debug($"[TCP Server] 客户端断开: {remote}");
             }
