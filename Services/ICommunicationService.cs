@@ -209,23 +209,37 @@ namespace aoi_common.Services
         {
             string remote = client.Client.RemoteEndPoint.ToString();
             _logger.Debug($"[TCP Server] 客户端接入: {remote}");
-            using (client)
-            using (var stream = client.GetStream())
+            try
             {
-                byte[] buffer = new byte[4096];
-                while (!token.IsCancellationRequested && client.Connected)
+                using (client)
+                using (var stream = client.GetStream())
                 {
-                    try
+                    byte[] buffer = new byte[4096];
+                    while (!token.IsCancellationRequested && client.Connected)
                     {
-                        int read = await stream.ReadAsync(buffer, 0, buffer.Length, token);
-                        if (read == 0) break;
-                        string message = Encoding.UTF8.GetString(buffer, 0, read);
-                        MessageReceived?.Invoke(remote, message);
+                        try
+                        {
+                            int read = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                            if (read == 0) break;
+                            string message = Encoding.UTF8.GetString(buffer, 0, read);
+                            MessageReceived?.Invoke(remote, message);
+                        }
+                        catch { break; }
                     }
-                    catch { break; }
                 }
             }
-            _logger.Debug($"[TCP Server] 客户端断开: {remote}");
+            finally
+            {
+                RaiseLogMessage($"[TCP Server] 客户端已断开: {remote}");
+                _logger.Debug($"[TCP Server] 客户端断开: {remote}");
+            }
+
+          
+        }
+
+        private void RaiseLogMessage(string message)
+        {
+            LogMessage?.Invoke(message);
         }
 
         #endregion

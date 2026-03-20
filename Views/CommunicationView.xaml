@@ -127,7 +127,9 @@
 
             <GridSplitter
                 Grid.Column="1"
-                HorizontalAlignment="Stretch"
+                Width="5"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Stretch"
                 Background="#999" />
 
             <GroupBox
@@ -137,10 +139,12 @@
                 <ListBox
                     Background="#2D2D30"
                     Foreground="White"
-                    ItemsSource="{Binding ReceivedMessages}">
+                    ItemsSource="{Binding ReceivedMessages}"
+                    ScrollViewer.CanContentScroll="False">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock
+                                Margin="0,2"
                                 Foreground="Cyan"
                                 Text="{Binding DisplayText}"
                                 TextWrapping="Wrap" />
