@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace aoi_common.Services
 {
-    
+
 
     public interface ICommunicationService
     {
@@ -22,9 +22,10 @@ namespace aoi_common.Services
 
         event Action<string, string> MessageReceived;
         event Action<string> LogMessage;
+        event Action<bool> ConnectionStatusChanged;
     }
 
-    public class CommunicationService : ICommunicationService,IDisposable
+    public class CommunicationService : ICommunicationService, IDisposable
     {
         private ILogger _logger;
         private TcpListener _tcpServer;
@@ -42,6 +43,7 @@ namespace aoi_common.Services
 
         public event Action<string, string> MessageReceived;
         public event Action<string> LogMessage;
+        public event Action<bool> ConnectionStatusChanged;
 
 
         public CommunicationService(ILogger logger)
@@ -51,7 +53,7 @@ namespace aoi_common.Services
 
         public void Start(CommProtocol protocol, CommRole role, string ip, int port)
         {
-            if(IsActive) Stop();
+            if (IsActive) Stop();
             _currentProtocol = protocol;
             _currentRole = role;
             _targetIp = ip;
@@ -73,10 +75,10 @@ namespace aoi_common.Services
             catch (Exception ex)
             {
                 _logger.Error($"启动异常: {ex.Message}");
-                
+
                 Stop();
             }
-          
+
         }
 
         public async Task SendAsync(string message)
@@ -188,10 +190,18 @@ namespace aoi_common.Services
             byte[] buffer = new byte[4096];
             while (!token.IsCancellationRequested && _tcpClient.Connected)
             {
-                int read = await stream.ReadAsync(buffer, 0, buffer.Length, token);
-                if (read == 0) break; // 服务器断开
-                MessageReceived?.Invoke("Server", Encoding.UTF8.GetString(buffer, 0, read));
+                try
+                {
+                    int read = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                    if (read == 0) break;  // 连接断开
+
+                    string message = Encoding.UTF8.GetString(buffer, 0, read);
+                    MessageReceived?.Invoke("Server", message);
+                }
+                catch { break; }
             }
+            IsActive = false;
+            ConnectionStatusChanged?.Invoke(false);
             _logger.Information("[TCP Client] 与服务器断开连接");
         }
 
@@ -209,7 +219,8 @@ namespace aoi_common.Services
                     {
                         int read = await stream.ReadAsync(buffer, 0, buffer.Length, token);
                         if (read == 0) break;
-                        MessageReceived?.Invoke(remote, Encoding.UTF8.GetString(buffer, 0, read));
+                        string message = Encoding.UTF8.GetString(buffer, 0, read);
+                        MessageReceived?.Invoke(remote, message);
                     }
                     catch { break; }
                 }
@@ -251,7 +262,7 @@ namespace aoi_common.Services
         }
 
         public void Dispose() => Stop();
-        
+
 
         #endregion
 

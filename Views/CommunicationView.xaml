@@ -31,7 +31,7 @@
                 <x:Type TypeName="comm:CommRole" />
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
-        <common:BoolToColorConverter x:Key="BoolToColorConverter"></common:BoolToColorConverter>
+        <common:BoolToColorConverter x:Key="BoolToColorConverter" />
     </UserControl.Resources>
 
     <Grid Margin="10" Background="AliceBlue">
@@ -87,7 +87,7 @@
                 <TextBox
                     Grid.Column="5"
                     Margin="5,0,0,0"
-                    Text="{Binding RemoteIp}" />
+                    Text="{Binding Ip}" />
 
                 <TextBlock
                     Grid.Column="6"
@@ -97,7 +97,7 @@
                 <TextBox
                     Grid.Column="7"
                     Margin="5,0,0,0"
-                    Text="{Binding RemotePort}" />
+                    Text="{Binding Port}" />
 
                 <TextBlock
                     Grid.Column="8"
@@ -119,16 +119,10 @@
                 Grid.Column="0"
                 Padding="5"
                 Header="发送消息">
-                <ListBox
-                    Background="#2D2D30"
-                    Foreground="White"
-                    ItemsSource="{Binding SentMessages}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Foreground="LimeGreen" Text="{Binding DisplayText}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <TextBox
+                    Grid.Row="0"
+                    AcceptsReturn="True"
+                    Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}" />
             </GroupBox>
 
             <GridSplitter
@@ -146,7 +140,10 @@
                     ItemsSource="{Binding ReceivedMessages}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Foreground="Cyan" Text="{Binding DisplayText}" />
+                            <TextBlock
+                                Foreground="Cyan"
+                                Text="{Binding DisplayText}"
+                                TextWrapping="Wrap" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
