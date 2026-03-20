@@ -41,11 +41,11 @@ namespace aoi_common.Services
 
             try
             {
-
-                //加载相机配置  //视觉vpp文件
-                await Task.WhenAll(InitializeCameraAsync(), InitializeVisionServiceAsync());
                 //加载通讯服务
                 await InitializeCommunicationAsync();
+                //加载相机配置  //视觉vpp文件
+                await Task.WhenAll(InitializeCameraAsync(), InitializeVisionServiceAsync());
+               
                 _logger.Information("应用初始化完成");
             }
             catch (Exception ex)
@@ -81,7 +81,6 @@ namespace aoi_common.Services
                     _logger.Information("接收来自 {Sender} 的消息: {Message}", sender, message);
                     try
                     {
-                        // 调用检测逻辑服务解析消息
                         _detectionLogicService.ProcessPlcData(message);
                     }
                     catch (Exception ex)

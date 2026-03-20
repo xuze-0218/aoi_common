@@ -51,7 +51,7 @@ namespace aoi_common.Services
             if (!Directory.Exists(_configFolder))
             {
                 Directory.CreateDirectory(_configFolder);
-                _logger.Information("创建相机配置文件夹: {ConfigFolder}", _configFolder);
+                _logger.Debug("创建相机配置文件夹: {ConfigFolder}", _configFolder);
             }
         }
 
@@ -63,7 +63,7 @@ namespace aoi_common.Services
             try
             {
                 _cogAcqFifoTool = new CogAcqFifoTool();
-                _logger.Information("创建新的CogAcqFifoTool实例");
+                _logger.Debug("创建新的CogAcqFifoTool实例");
                 return _cogAcqFifoTool;
             }
             catch (Exception ex)
