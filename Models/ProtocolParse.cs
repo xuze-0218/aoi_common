@@ -6,25 +6,28 @@ using System.Threading.Tasks;
 
 namespace aoi_common.Models
 {
-    public class DetectCode
+    /// <summary>
+    /// 报文解析
+    /// </summary>
+    public class ProtocolParse
     {
-        public int CodeLength { get; private set; }
-        public int FuncCode { get; private set; }
-        public int TrigType { get; private set; }
-        public int TrigCount { get; private set; }
-        public int NameLength { get; private set; }
-        public string ImageName { get; private set; } = string.Empty;
-        public int CalibOrDetect { get; private set; }
-        public int ProductType1 { get; private set; }
-        public int CellType1 { get; private set; }
-        public int ProductType2 { get; private set; }
-        public int CellType2 { get; private set; }
-        public int BackUp { get; private set; }
+        public int CodeLength { get; private set; }                     //报文长度
+        public int FuncCode { get; private set; }                       //功能码
+        public int TrigType { get; private set; }                       //检测类型
+        public int TrigCount { get; private set; }                      //检测数量
+        public int NameLength { get; private set; }                     //二维码名称长度
+        public string ImageName { get; private set; } = string.Empty;   //二维码名称
+        public int CalibOrDetect { get; private set; }                  //标定或检测（0-标定 1-检测）
+        public int ProductType1 { get; private set; }                   //产品类型1
+        public int CellType1 { get; private set; }                      //电芯类型1
+        public int ProductType2 { get; private set; }                   //产品类型2
+        public int CellType2 { get; private set; }                      //电芯类型2
+        public int BackUp { get; private set; }                         //备用
 
         public bool IsValid { get; private set; }
         public string ErrorMsg { get; private set; } = string.Empty;
 
-        public DetectCode(string plcData)
+        public ProtocolParse(string plcData)
         {
             if (string.IsNullOrEmpty(plcData) || plcData.Length < 178)
             {

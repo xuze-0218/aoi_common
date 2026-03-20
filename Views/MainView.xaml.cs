@@ -27,7 +27,7 @@ namespace aoi_common.Views
         public MainView(IEventAggregator eventAggregator)
         {
             InitializeComponent();
-            eventAggregator.GetEvent<VisionResultEvent>().Subscribe(record =>
+            eventAggregator.GetEvent<ICogImageDisplayEvent>().Subscribe(record =>
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {

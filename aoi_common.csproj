@@ -202,15 +202,15 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Common\UiLogSink.cs" />
-    <Compile Include="Events\VisionResultEvent.cs" />
+    <Compile Include="Events\ICogImageDisplayEvent.cs" />
     <Compile Include="Models\CommunicationModel.cs" />
-    <Compile Include="Models\ConfigParam.cs" />
-    <Compile Include="Models\DetectCode.cs" />
+    <Compile Include="Models\ParametersConfig.cs" />
+    <Compile Include="Models\ProtocolParse.cs" />
     <Compile Include="Models\DetectionResult.cs" />
     <Compile Include="Models\LogEventModel.cs" />
     <Compile Include="Services\IApplicationStartupService.cs" />
     <Compile Include="Services\ICommunicationService.cs" />
-    <Compile Include="Services\IConfigService.cs" />
+    <Compile Include="Services\IParametersConfigService.cs" />
     <Compile Include="Services\IDetectionLogicService.cs" />
     <Compile Include="Services\IImageSource.cs" />
     <Compile Include="Services\ICameraConfigService.cs" />

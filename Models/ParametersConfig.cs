@@ -15,7 +15,7 @@ namespace aoi_common.Models
         BOOL,
         STRING
     }
-    public class ConfigParam : BindableBase
+    public class ParametersConfig : BindableBase
     {
         private string _name;
         public string Name { get => _name; set => SetProperty(ref _name, value); }
@@ -39,24 +39,5 @@ namespace aoi_common.Models
             get { return _moduleName; }
             set { _moduleName = value; }
         }
-    }
-    public class ConfigModuleGroup : BindableBase
-    {
-        private string _moduleName;
-        public string ModuleName
-        {
-            get => _moduleName;
-            set => SetProperty(ref _moduleName, value);
-        }
-
-        private bool _isExpanded = false; // 默认展开
-        public bool IsExpanded
-        {
-            get => _isExpanded;
-            set => SetProperty(ref _isExpanded, value);
-        }
-
-        // 当前模块下的所有参数
-        public ObservableCollection<ConfigParam> Params { get; } = new ObservableCollection<ConfigParam>();
     }
 }

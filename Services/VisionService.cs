@@ -87,7 +87,7 @@ namespace aoi_common.Services
             {
                 displayRecord = toolBlock.CreateLastRunRecord().SubRecords[0];
             }
-            _eventAggregator.GetEvent<VisionResultEvent>().Publish(displayRecord);
+            _eventAggregator.GetEvent<ICogImageDisplayEvent>().Publish(displayRecord);
         }
 
         public void ChangeImagePath(string imagePath)

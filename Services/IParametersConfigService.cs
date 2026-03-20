@@ -12,26 +12,26 @@ using System.Threading.Tasks;
 
 namespace aoi_common.Services
 {
-    public interface IConfigService
+    public interface IParametersConfigService
     {
-        ObservableCollection<ConfigParam> ConfigParams { get; }
+        ObservableCollection<ParametersConfig> ConfigParams { get; }
         void LoadConfig();
-        bool SaveConfig(IEnumerable<ConfigParam> configs);
+        bool SaveConfig(IEnumerable<ParametersConfig> configs);
         int GetInt(string moduleName, string paramName, int defaultValue = 0);
         float GetFloat(string moduleName, string paramName, float defaultValue = 0f);
         string GetString(string moduleName, string paramName, string defaultValue = "");
         bool GetBool(string moduleName, string paramName, bool defaultValue = false);
     }
 
-    public class ConfigService : IConfigService
+    public class ParametersConfigService : IParametersConfigService
     {
         private readonly string _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config/ConfigParas.json");
-        public ObservableCollection<ConfigParam> ConfigParams { get; private set; }
+        public ObservableCollection<ParametersConfig> ConfigParams { get; private set; }
 
 
-        public ConfigService()
+        public ParametersConfigService()
         {
-            ConfigParams =new ObservableCollection<ConfigParam>();
+            ConfigParams =new ObservableCollection<ParametersConfig>();
             LoadConfig();
         }
         public int GetInt(string moduleName, string paramName, int defaultValue = 0)
@@ -70,7 +70,7 @@ namespace aoi_common.Services
                 try
                 {
                     var json = File.ReadAllText(_configPath);
-                    var list = JsonConvert.DeserializeObject<ObservableCollection<ConfigParam>>(json);
+                    var list = JsonConvert.DeserializeObject<ObservableCollection<ParametersConfig>>(json);
                     ConfigParams.Clear();
                     if (list != null)
                     {
@@ -89,7 +89,7 @@ namespace aoi_common.Services
             }
         }
 
-        public bool SaveConfig(IEnumerable<ConfigParam> configs)
+        public bool SaveConfig(IEnumerable<ParametersConfig> configs)
         {
             try
             {
@@ -104,7 +104,7 @@ namespace aoi_common.Services
             }
         }
 
-        private ConfigParam FindParam(string moduleName, string paramName)
+        private ParametersConfig FindParam(string moduleName, string paramName)
         {
             // 如果 moduleName 为空，则在全局搜索 paramName；否则按模块匹配
             return ConfigParams.FirstOrDefault(p =>

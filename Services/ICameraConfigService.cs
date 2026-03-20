@@ -12,34 +12,20 @@ namespace aoi_common.Services
     public interface ICameraConfigService
     {
         /// <summary>
+        /// 获取当前的实例
+        /// </summary>
+        CogAcqFifoTool CurrentCogAcqFifoTool { get; }
+        /// <summary>
         /// 获取或创建CogAcqFifoTool实例
         /// </summary>
         CogAcqFifoTool GetOrCreateAcqFifoTool();
-
         /// <summary>
         /// 从文件加载相机配置
         /// </summary>
         Task<bool> LoadConfigAsync(string configPath);
-
-        /// <summary>
-        /// 保存相机配置到文件
-        /// </summary>
         Task<bool> SaveConfigAsync(string configPath);
-
-        /// <summary>
-        /// 获取当前的CogAcqFifoTool实例
-        /// </summary>
-        CogAcqFifoTool CurrentCogAcqFifoTool { get; }
-
-        /// <summary>
-        /// 是否已初始化
-        /// </summary>
-        bool IsInitialized { get; }
-
-        /// <summary>
-        /// 获取默认配置路径
-        /// </summary>
         string GetDefaultConfigPath();
+        bool IsInitialized { get; }
     }
 
     public class CameraConfigService : ICameraConfigService
@@ -49,25 +35,14 @@ namespace aoi_common.Services
         private readonly string _configFolder;
         private const string DEFAULT_CONFIG_FILENAME = "CameraConfig.vpp";
 
-        public CogAcqFifoTool CurrentCogAcqFifoTool
-        {
-            get { return _cogAcqFifoTool; }
-        }
+        public CogAcqFifoTool CurrentCogAcqFifoTool => _cogAcqFifoTool;
 
-        public bool IsInitialized
-        {
-            get { return _cogAcqFifoTool != null; }
-        }
-
+        public bool IsInitialized => _cogAcqFifoTool != null;
+        
         public CameraConfigService(ILogger logger)
         {
             _logger = logger;
-            // 配置文件保存在 AppData 目录
-            _configFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "aoi_common",
-                "CameraConfigs");
-
+            _configFolder= Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources");
             EnsureConfigFolderExists();
         }
 
@@ -113,7 +88,6 @@ namespace aoi_common.Services
 
                 try
                 {
-                    // 使用CogSerializer加载配置
                     _cogAcqFifoTool = (CogAcqFifoTool)CogSerializer.LoadObjectFromFile(configPath);
                     _logger.Information("成功加载相机配置: {ConfigPath}", configPath);
                     return true;
@@ -141,12 +115,10 @@ namespace aoi_common.Services
 
                 try
                 {
-                    // 确保目录存在
                     string directory = Path.GetDirectoryName(configPath);
                     if (!Directory.Exists(directory))
                         Directory.CreateDirectory(directory);
 
-                    // 使用CogSerializer保存配置
                     CogSerializer.SaveObjectToFile(_cogAcqFifoTool, configPath);
                     _logger.Information("成功保存相机配置: {ConfigPath}", configPath);
                     return true;

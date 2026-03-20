@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace aoi_common.Events
 {
-    public class VisionResultEvent:PubSubEvent<ICogRecord>
+    public class ICogImageDisplayEvent:PubSubEvent<ICogRecord>
     {
     }
 }

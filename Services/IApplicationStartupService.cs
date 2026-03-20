@@ -35,13 +35,9 @@ namespace aoi_common.Services
 
             try
             {
-                // 第一步：加载相机配置
                 await InitializeCameraAsync();
-
-                // 第二步：初始化VisionService
                 await InitializeVisionServiceAsync();
-
-                _logger.Information("��用初始化完成");
+                _logger.Information("应用初始化完成");
             }
             catch (Exception ex)
             {
@@ -56,10 +52,7 @@ namespace aoi_common.Services
 
             try
             {
-                // 获取或创建CogAcqFifoTool
                 _cameraConfigService.GetOrCreateAcqFifoTool();
-
-                // 尝试加载本地配置
                 string defaultConfigPath = _cameraConfigService.GetDefaultConfigPath();
                 bool configLoaded = await _cameraConfigService.LoadConfigAsync(defaultConfigPath);
 
@@ -69,7 +62,7 @@ namespace aoi_common.Services
                 }
                 else
                 {
-                    _logger.Information("使用默认相机配置（用户可在调试界面修改）");
+                    _logger.Information("本地相机配置不存在，使用默认配置");
                 }
             }
             catch (Exception ex)
@@ -85,12 +78,12 @@ namespace aoi_common.Services
 
             try
             {
-                // 这里填写你的vpp文件路径
-                string vppPath = System.IO.Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory,
-                    "Resources",
-                    "toolblock.vpp");
-
+                //{
+                //    string vppPath = System.IO.Path.Combine(
+                //        AppDomain.CurrentDomain.BaseDirectory,
+                //        "Resources",
+                //        "toolblock.vpp");
+                string vppPath = "C:\\Users\\xuze\\Desktop\\testvpp.vpp";
                 await _visionService.InitialAsync(vppPath);
 
                 if (_visionService.IsInitialized)
@@ -115,7 +108,6 @@ namespace aoi_common.Services
 
             try
             {
-                // 保存当前的相机配置
                 string defaultConfigPath = _cameraConfigService.GetDefaultConfigPath();
                 await _cameraConfigService.SaveConfigAsync(defaultConfigPath);
                 _logger.Information("相机配置已保存");

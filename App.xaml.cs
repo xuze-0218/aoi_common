@@ -27,18 +27,25 @@ namespace aoi_common
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            // 注册相机配置服务
+            //相机配置
             containerRegistry.RegisterSingleton<ICameraConfigService, CameraConfigService>();
+            //通讯服务
             containerRegistry.RegisterSingleton<ICommunicationService, CommunicationService>();
+            //报文解析
             containerRegistry.RegisterSingleton<IDetectionLogicService, DetectionLogicService>();
-            containerRegistry.RegisterSingleton<IConfigService, ConfigService>();
+            //参数配置
+            containerRegistry.RegisterSingleton<IParametersConfigService, ParametersConfigService>();
             // 注册Vision服务
             containerRegistry.RegisterSingleton<IVisionService, VisionService>();
             // 注册应用启动服务
             containerRegistry.RegisterSingleton<IApplicationStartupService, ApplicationStartupService>();
+            //相机调试
             containerRegistry.RegisterForNavigation<CameraDebugView, CameraDebugViewModel>();
+            //程序调试
             containerRegistry.RegisterDialog<DebugView, DebugViewModel>();
+            //参数配置逻辑
             containerRegistry.RegisterDialog<ParamConfigView, ParamConfigViewModel>();
+            //通讯配置逻辑
             containerRegistry.RegisterDialog<CommunicationView, CommunicationViewModel>();
 
             Log.Logger = new LoggerConfiguration().MinimumLevel.Information().Enrich.FromLogContext()
@@ -68,8 +75,8 @@ namespace aoi_common
                 Shutdown();
             }
 
-            var visionservice = Container.Resolve<IVisionService>();
-            await Task.Run(async () => await visionservice.InitialAsync("C:\\Users\\xuze\\Desktop\\testvpp.vpp"));
+            //var visionservice = Container.Resolve<IVisionService>();
+            //await Task.Run(async () => await visionservice.InitialAsync("C:\\Users\\xuze\\Desktop\\testvpp.vpp"));
         }
 
         protected override void OnExit(ExitEventArgs e)

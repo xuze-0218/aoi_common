@@ -15,8 +15,8 @@ namespace aoi_common.Services
 
     public class DetectionLogicService : IDetectionLogicService
     {
-        private readonly IConfigService _config;
-        public DetectionLogicService(IConfigService config)
+        private readonly IParametersConfigService _config;
+        public DetectionLogicService(IParametersConfigService config)
         {
             _config = config;
         }
@@ -32,7 +32,7 @@ namespace aoi_common.Services
                 return result;
             }
 
-            var dc = new DetectCode(rawPlcData);
+            var dc = new ProtocolParse(rawPlcData);
             if (!dc.IsValid)
             {
                 SetError(result, logs, 98, dc.ErrorMsg);
@@ -70,7 +70,7 @@ namespace aoi_common.Services
             logs.Add(res.Message);
         }
 
-        private void ProcessDetection(DetectionResult res, List<string> logs, DetectCode dc)
+        private void ProcessDetection(DetectionResult res, List<string> logs, ProtocolParse dc)
         {
             logs.Add("成功进入检测！");
 
@@ -150,7 +150,7 @@ namespace aoi_common.Services
             Log.Warning("检测逻辑被拦截: {Msg}", msg);
         }
 
-        private void PopulateLogDetails(List<string> logs, DetectCode dc)
+        private void PopulateLogDetails(List<string> logs, ProtocolParse dc)
         {
             logs.Add($"功能码:{dc.FuncCode}");
             logs.Add($"检测类型:{dc.TrigType}");

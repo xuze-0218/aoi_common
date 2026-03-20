@@ -23,8 +23,8 @@ namespace aoi_common.ViewModels
         
         private string _lastModuleName = "未分类模块";
         private ICollectionView _parametersView;
-        private IConfigService _configService;
-        public ObservableCollection<ConfigParam> Parameters => _configService.ConfigParams;
+        private IParametersConfigService _configService;
+        public ObservableCollection<ParametersConfig> Parameters => _configService.ConfigParams;
 
         /// <summary>
         /// 用于前端 DataGrid 绑定的视图，支持分组和过滤
@@ -34,8 +34,8 @@ namespace aoi_common.ViewModels
             get => _parametersView;
             set => SetProperty(ref _parametersView, value);
         }
-        private ConfigParam _selectedParameter;
-        public ConfigParam SelectedParameter
+        private ParametersConfig _selectedParameter;
+        public ParametersConfig SelectedParameter
         {
             get => _selectedParameter;
             set
@@ -50,20 +50,20 @@ namespace aoi_common.ViewModels
         public string Title => "参数配置";
 
         public DelegateCommand AddCommand { get; }
-        public DelegateCommand<ConfigParam> DeleteCommand { get; }
+        public DelegateCommand<ParametersConfig> DeleteCommand { get; }
         public DelegateCommand SaveCommand { get; }
 
         public event Action<IDialogResult> RequestClose;
 
-        public ParamConfigViewModel(IConfigService configService)
+        public ParamConfigViewModel(IParametersConfigService configService)
         {
             _configService = configService;
             //LoadConfig();
 
             ParametersView = CollectionViewSource.GetDefaultView(Parameters);
-            ParametersView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ConfigParam.ModuleName)));
-            ParametersView.SortDescriptions.Add(new SortDescription(nameof(ConfigParam.ModuleName), ListSortDirection.Ascending));
-            ParametersView.SortDescriptions.Add(new SortDescription(nameof(ConfigParam.Name), ListSortDirection.Ascending));
+            ParametersView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ParametersConfig.ModuleName)));
+            ParametersView.SortDescriptions.Add(new SortDescription(nameof(ParametersConfig.ModuleName), ListSortDirection.Ascending));
+            ParametersView.SortDescriptions.Add(new SortDescription(nameof(ParametersConfig.Name), ListSortDirection.Ascending));
 
             AddCommand = new DelegateCommand(() =>
             {
@@ -72,7 +72,7 @@ namespace aoi_common.ViewModels
                     _lastModuleName = SelectedParameter.ModuleName;
                 }
 
-                var newParam = new ConfigParam
+                var newParam = new ParametersConfig
                 {
                     Name = "New_Param",
                     ModuleName = _lastModuleName
@@ -83,12 +83,12 @@ namespace aoi_common.ViewModels
                 Parameters.Add(newParam);
             });
 
-            DeleteCommand = new DelegateCommand<ConfigParam>(p => Parameters.Remove(p));
+            DeleteCommand = new DelegateCommand<ParametersConfig>(p => Parameters.Remove(p));
             SaveCommand = new DelegateCommand(()=>_configService.SaveConfig(Parameters));
         }
         private void OnParameterPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ConfigParam.ModuleName) && sender is ConfigParam p)
+            if (e.PropertyName == nameof(ParametersConfig.ModuleName) && sender is ParametersConfig p)
             {
                 _lastModuleName = p.ModuleName;
             }
