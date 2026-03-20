@@ -19,10 +19,7 @@ namespace aoi_common.Services
         private readonly IVisionService _visionService;
         private readonly ILogger _logger;
 
-        public ApplicationStartupService(
-            ICameraConfigService cameraConfigService,
-            IVisionService visionService,
-            ILogger logger)
+        public ApplicationStartupService(ICameraConfigService cameraConfigService, IVisionService visionService, ILogger logger)
         {
             _cameraConfigService = cameraConfigService;
             _visionService = visionService;
@@ -109,6 +106,8 @@ namespace aoi_common.Services
             try
             {
                 string defaultConfigPath = _cameraConfigService.GetDefaultConfigPath();
+                if (_cameraConfigService.CurrentCogAcqFifoTool.Operator == null)
+                    return;
                 await _cameraConfigService.SaveConfigAsync(defaultConfigPath);
                 _logger.Information("相机配置已保存");
             }

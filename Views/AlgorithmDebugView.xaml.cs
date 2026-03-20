@@ -20,9 +20,9 @@ namespace aoi_common.Views
     /// <summary>
     /// RunView.xaml 的交互逻辑
     /// </summary>
-    public partial class DebugView : UserControl
+    public partial class AlgorithmDebugView : UserControl
     {
-        public DebugView(IVisionService visionService)
+        public AlgorithmDebugView(IVisionService visionService)
         {
             InitializeComponent();
             if (visionService.toolBlock!=null)

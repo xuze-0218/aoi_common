@@ -35,28 +35,38 @@
             Grid.Row="1"
             Background="#2D2D30"
             Orientation="Horizontal">
+            <!--  单张离线测试  -->
             <Button
-                Width="100"
+                Width="120"
                 Height="30"
                 Margin="5"
-                Command="{Binding ImportImageCommand}"
-                Content="导入图片" />
+                Background="Orange"
+                Command="{Binding RunSingleImageCommand}"
+                Content="单张测试"
+                Foreground="White"
+                ToolTip="选择单个图像文件进行测试" />
+
+            <!--  文件夹批量测试  -->
+            <Button
+                Width="120"
+                Height="30"
+                Margin="5"
+                Background="Purple"
+                Command="{Binding RunFolderBatchCommand}"
+                Content="批量测试"
+                Foreground="White"
+                ToolTip="选择文件夹，对所有图像进行批量测试" />
+
+            <!--  单次测试（实时）  -->
             <Button
                 Width="100"
                 Height="30"
                 Margin="5"
                 Background="Green"
                 Command="{Binding RunCommand}"
-                Content="单次测试"
-                Foreground="White" />
-            <Button
-                Width="100"
-                Height="30"
-                Margin="5"
-                Background="Red"
-                Command="{Binding StopCommand}"
-                Content="停止检测"
-                Foreground="White" />
+                Content="单次运行"
+                Foreground="White"
+                ToolTip="处理当前加载的图像" />
 
             <Separator Margin="10,5" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
@@ -64,7 +74,7 @@
                 Margin="10,0"
                 VerticalAlignment="Center"
                 Foreground="White">
-                状态:<Run Foreground="LightGreen" Text="{Binding Status}" />
+                状态:<Run Foreground="LightGreen" Text="就绪" />
             </TextBlock>
         </StackPanel>
 
@@ -93,7 +103,7 @@
                         <TextBlock
                             FontWeight="Bold"
                             Foreground="LimeGreen"
-                            Text="{Binding CurrentResultText, FallbackValue='READY'}" />
+                            Text="READY" />
                     </Viewbox>
                 </Border>
 
@@ -115,7 +125,7 @@
                                     FontSize="24"
                                     FontWeight="Bold"
                                     Foreground="White"
-                                    Text="{Binding TotalCount}" />
+                                    Text="0" />
                             </StackPanel>
                             <StackPanel Margin="5">
                                 <TextBlock
@@ -126,7 +136,7 @@
                                     FontSize="24"
                                     FontWeight="Bold"
                                     Foreground="White"
-                                    Text="{Binding OkCount}" />
+                                    Text="0" />
                             </StackPanel>
                             <StackPanel Margin="5">
                                 <TextBlock
@@ -137,7 +147,7 @@
                                     FontSize="24"
                                     FontWeight="Bold"
                                     Foreground="White"
-                                    Text="{Binding NgCount}" />
+                                    Text="0" />
                             </StackPanel>
                             <StackPanel Margin="5">
                                 <TextBlock
@@ -148,7 +158,7 @@
                                     FontSize="24"
                                     FontWeight="Bold"
                                     Foreground="White"
-                                    Text="{Binding YieldRate}" />
+                                    Text="0%" />
                             </StackPanel>
                         </UniformGrid>
                     </GroupBox>
@@ -174,35 +184,12 @@
                 BorderBrush="#555"
                 Foreground="White"
                 Header="历史检测图">
-                <ListBox
-                    Background="Black"
-                    BorderThickness="0"
-                    ItemsSource="{Binding HistoryImages}"
-                    SelectedItem="{Binding SelectedHistoryImage}">
+                <ListBox Background="Black" BorderThickness="0">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <StackPanel Orientation="Horizontal" />
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border
-                                Margin="2"
-                                BorderBrush="{Binding ResultColor}"
-                                BorderThickness="2">
-                                <Grid Width="160" Height="120">
-                                    <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" />
-                                    <TextBlock
-                                        Padding="2"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Bottom"
-                                        Background="#88000000"
-                                        Foreground="White"
-                                        Text="{Binding Result}" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
                 </ListBox>
             </GroupBox>
 

@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="aoi_common.Views.DebugView"
+    x:Class="aoi_common.Views.AlgorithmDebugView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:cognex="clr-namespace:Cognex.VisionPro;assembly=Cognex.VisionPro.Controls"

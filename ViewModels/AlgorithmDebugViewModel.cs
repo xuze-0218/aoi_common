@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace aoi_common.ViewModels
 {
-    public class DebugViewModel : BindableBase, IDialogAware
+    public class AlgorithmDebugViewModel : BindableBase, IDialogAware
     {
         private readonly ILogger _logger;
         public string Title => "程序调试窗口";
@@ -20,7 +20,7 @@ namespace aoi_common.ViewModels
         public bool CanCloseDialog() => true;
         public void OnDialogClosed() { _logger.Information("ToolBlock调试窗口已关闭"); }
         public void OnDialogOpened(IDialogParameters parameters) {}
-        public DebugViewModel(ILogger logger)
+        public AlgorithmDebugViewModel(ILogger logger)
         {
             _logger = logger;
             _logger.Information("ToolBlock调试窗口已打开");

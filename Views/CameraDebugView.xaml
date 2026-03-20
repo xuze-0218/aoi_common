@@ -9,32 +9,62 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Grid Background="White" Margin="10">
+    <Grid Margin="10" Background="White">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- 状态和按钮 -->
-        <StackPanel Grid.Row="0" Orientation="Vertical" Margin="0,0,0,10">
-            <TextBlock Text="相机调试界面" FontSize="16" FontWeight="Bold"/>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="Green" Margin="0,5,0,0"/>
+        <!--  状态和按钮  -->
+        <StackPanel
+            Grid.Row="0"
+            Margin="0,0,0,10"
+            Orientation="Vertical">
+            <TextBlock
+                FontSize="16"
+                FontWeight="Bold"
+                Text="相机调试界面" />
+            <TextBlock
+                Margin="0,5,0,0"
+                Foreground="Green"
+                Text="{Binding StatusMessage}" />
         </StackPanel>
 
-        <!-- CogAcqFifoEditV2控件 -->
-        <WindowsFormsHost Grid.Row="1" x:Name="windowsFormsHost" UseLayoutRounding="True">
-            <cog:CogAcqFifoEditV2 x:Name="cogAcqFifoEditV2" Subject="{Binding CurrentCogAcqFifoTool }" />
+        <!--  CogAcqFifoEditV2控件  -->
+        <WindowsFormsHost
+            x:Name="windowsFormsHost"
+            Grid.Row="1"
+            UseLayoutRounding="True">
+            <cog:CogAcqFifoEditV2 x:Name="cogAcqFifoEditV2" Subject="{Binding CurrentCogAcqFifoTool}" />
         </WindowsFormsHost>
 
-        <!-- 按钮区域 -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="加载配置" Command="{Binding LoadConfigCommand}" 
-                    Padding="10,5" Margin="0,0,10,0" Background="#007ACC" Foreground="White"/>
-            <Button Content="保存配置" Command="{Binding SaveConfigCommand}" 
-                    Padding="10,5" Margin="0,0,10,0" Background="#107C10" Foreground="White"/>
-            <Button Content="重新加载默认" Command="{Binding ReloadDefaultCommand}" 
-                    Padding="10,5" Background="#FFB900" Foreground="Black"/>
+        <!--  按钮区域  -->
+        <StackPanel
+            Grid.Row="2"
+            Margin="0,10,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                Margin="0,0,10,0"
+                Padding="10,5"
+                Background="#007ACC"
+                Command="{Binding LoadConfigCommand}"
+                Content="加载配置"
+                Foreground="White" />
+            <Button
+                Margin="0,0,10,0"
+                Padding="10,5"
+                Background="#107C10"
+                Command="{Binding SaveConfigCommand}"
+                Content="保存配置"
+                Foreground="White" />
+            <Button
+                Padding="10,5"
+                Background="#FFB900"
+                Command="{Binding ReloadDefaultCommand}"
+                Content="重新加载默认"
+                Foreground="Black" />
         </StackPanel>
     </Grid>
 </UserControl>

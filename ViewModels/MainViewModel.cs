@@ -21,50 +21,106 @@ namespace aoi_common.ViewModels
     {
         private readonly IVisionService _visionService;
         private readonly IDialogService _dialogService;
+        private readonly ILogger _logger;
         public ObservableCollection<LogEventModel> LogSource => UiLogSink.LogCollection;
-        public DelegateCommand OpenDebugCommand { get; }
-        public DelegateCommand ParaDebugCommand { get; }
-        public DelegateCommand CommunicateDebugCommand { get; }
-        public DelegateCommand ImportImageCommand { get; }
-        public DelegateCommand RunCommand { get; }
+        public DelegateCommand OpenDebugCommand { get; private set; }
+        public DelegateCommand ParaDebugCommand { get; private set; }
+        public DelegateCommand CommunicateDebugCommand { get; private set; }
+        public DelegateCommand ImportImageCommand { get; private set; }
+        public ICommand RunSingleImageCommand { get; private set; }
+        public ICommand RunFolderBatchCommand { get; private set; }
+        public DelegateCommand RunCommand { get; private set; }
 
-        public MainViewModel(IVisionService visionService, IDialogService dialogService)
+        public MainViewModel(IVisionService visionService, IDialogService dialogService, ILogger logger)
         {
             _visionService = visionService;
             _dialogService = dialogService;
-            OpenDebugCommand = new DelegateCommand(() =>
+            _logger = logger;
+            InitializeCommands();
+            MonitorStatus();
+            _logger.Information("AOI 系统主界面加载完成。");
+
+        }
+
+        private void InitializeCommands()
+        {
+            OpenDebugCommand = new DelegateCommand(
+                () => { _dialogService.Show("AlgorithmDebugView", new DialogParameters(), r => { }); },
+                () => _visionService.IsInitialized);
+
+            ParaDebugCommand = new DelegateCommand(
+                () => { _dialogService.Show("ParamConfigView", new DialogParameters(), r => { }); });
+
+            CommunicateDebugCommand = new DelegateCommand(
+                () => { _dialogService.Show("CommunicationView", new DialogParameters(), r => { }); });
+
+            RunSingleImageCommand = new DelegateCommand(() =>
             {
-                if (!_visionService.IsInitialized)
+                var ofd = new Microsoft.Win32.OpenFileDialog
                 {
-                   
-                    return;
-                }
-                _dialogService.Show("DebugView",
-                    new DialogParameters(), r => { });
-            }, () => _visionService.IsInitialized);
-            ParaDebugCommand = new DelegateCommand
-                (() => { _dialogService.Show("ParamConfigView", new DialogParameters(), r => { }); });
+                    Filter = "图片文件|*.bmp;*.jpg;*.png;*.tiff|All Files|*.*"
+                };
 
-            CommunicateDebugCommand = new DelegateCommand
-                (() => { _dialogService.Show("CommunicationView", new DialogParameters(), r => { }); });
-
-            ImportImageCommand = new DelegateCommand(() =>
-            {
-                var ofd = new Microsoft.Win32.OpenFileDialog { Filter = "图片文件|*.bmp;*.jpg;*.png;*.idb" };
                 if (ofd.ShowDialog() == true)
                 {
-                    _visionService.ChangeImagePath(ofd.FileName);
-                    _visionService.RunTool();
+                    try
+                    {
+                        _logger.Information("开始单张图像测试: {FilePath}", ofd.FileName);
+                        LocalFileImageSource imageSource = new LocalFileImageSource(ofd.FileName, _logger);
+                        _visionService.RunToolWithImageSource(imageSource);
+                        imageSource.Dispose();
+                        _logger.Information("单张图像测试完成");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "单张图像测试失败");
+                    }
+                }
+            });
+
+            RunFolderBatchCommand = new DelegateCommand(() =>
+            {
+                var dialog = new System.Windows.Forms.FolderBrowserDialog
+                {
+                    Description = "选择包含图像的文件夹"
+                };
+
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    try
+                    {
+                        _logger.Information("开始批量测试: {FolderPath}", dialog.SelectedPath);
+                        LocalFolderImageSource imageSource = new LocalFolderImageSource(dialog.SelectedPath, _logger);
+
+                        if (imageSource.TotalCount == 0)
+                        {
+                            _logger.Warning("文件夹中没有支持的图像文件");
+                            return;
+                        }
+
+                        _logger.Information("共找到 {Count} 张图像，开始处理...", imageSource.TotalCount);
+                        _visionService.RunToolWithImageSource(imageSource);
+                        imageSource.Dispose();
+                        _logger.Information("文件夹批量测试完成");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "文件夹批量测试失败");
+                    }
                 }
             });
 
             RunCommand = new DelegateCommand(() =>
             {
-
-                _visionService.RunTool();
+                try
+                {
+                    _visionService.RunTool();
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "单次测试失败");
+                }
             });
-            MonitorStatus();
-            Log.Information("AOI 系统主界面加载完成。");
         }
 
         private async void MonitorStatus()

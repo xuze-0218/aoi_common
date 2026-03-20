@@ -62,12 +62,12 @@ namespace aoi_common.Services
                 {
                     if (toolBlock != null)
                         toolBlock.Ran -= toolBlock_Ran;
-                    _logger.Information("正在加载vpp文件: {Path}", path);
+                    _logger.Debug("正在加载vpp文件: {Path}", path);
                     toolBlock = (CogToolBlock)CogSerializer.LoadObjectFromFile(path);
                     _isInitialized = true;
 
                     toolBlock.Ran += toolBlock_Ran;
-                    _logger.Information("✓ ToolBlock加载成功");
+                    _logger.Information("ToolBlock加载成功");
                 }
                 catch (Exception ex)
                 {
@@ -183,9 +183,9 @@ namespace aoi_common.Services
                     ICogImage currentImage = imageSource.GetNext();
                     string imageName = imageSource.GetCurrentImageName();
 
-                    if (toolBlock.Inputs.Contains("Image"))
+                    if (toolBlock.Inputs.Contains("IntputImage"))
                     {
-                        toolBlock.Inputs["Image"].Value = currentImage;
+                        toolBlock.Inputs["IntputImage"].Value = currentImage;
                     }
 
                     toolBlock.Run();
@@ -218,9 +218,9 @@ namespace aoi_common.Services
 
             try
             {
-                if (toolBlock.Inputs.Contains("Image"))
+                if (toolBlock.Inputs.Contains("IntputImage"))
                 {
-                    toolBlock.Inputs["Image"].Value = image;
+                    toolBlock.Inputs["IntputImage"].Value = image;
                 }
 
                 toolBlock.Run();

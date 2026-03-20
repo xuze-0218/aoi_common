@@ -42,7 +42,7 @@ namespace aoi_common
             //相机调试
             containerRegistry.RegisterForNavigation<CameraDebugView, CameraDebugViewModel>();
             //程序调试
-            containerRegistry.RegisterDialog<DebugView, DebugViewModel>();
+            containerRegistry.RegisterDialog<AlgorithmDebugView, AlgorithmDebugViewModel>();
             //参数配置逻辑
             containerRegistry.RegisterDialog<ParamConfigView, ParamConfigViewModel>();
             //通讯配置逻辑
@@ -56,7 +56,6 @@ namespace aoi_common
 
             containerRegistry.RegisterInstance<ILogger>(Log.Logger);
         }
-
 
         protected override async void OnInitialized()
         {
@@ -82,8 +81,6 @@ namespace aoi_common
         protected override void OnExit(ExitEventArgs e)
         {
             base.OnExit(e);
-
-            // 应用关闭时保存配置
             try
             {
                 var startupService = Container.Resolve<IApplicationStartupService>();
