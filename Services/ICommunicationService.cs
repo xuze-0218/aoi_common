@@ -29,7 +29,8 @@ namespace aoi_common.Services
     {
         private ILogger _logger;
         private TcpListener _tcpServer;
-        private TcpClient _tcpClient;
+        private TcpClient _tcpServerClient;  // ✅ 保存 Server 端接受的客户端
+        private TcpClient _tcpClient;        // 保存 Client 模式的连接
         private UdpClient _udpClient;
         private IPEndPoint _remoteEndPoint;
         private CancellationTokenSource _cts;
@@ -53,7 +54,11 @@ namespace aoi_common.Services
 
         public void Start(CommProtocol protocol, CommRole role, string ip, int port)
         {
-            if (IsActive) Stop();
+            if (IsActive)
+            {
+                _logger.Warning("[Start] 服务已在运行，先停止");
+                Stop();
+            }
             _currentProtocol = protocol;
             _currentRole = role;
             _targetIp = ip;
@@ -71,12 +76,16 @@ namespace aoi_common.Services
                 {
                     StartUdp(role, ip, port);
                 }
-                IsActive = true;
+                //if (protocol == CommProtocol.TCP && role == CommRole.Server)
+                //{
+                //    IsActive = true;
+                //    ConnectionStatusChanged?.Invoke(true);
+                //    _logger.Information("[TCP Server] 服务已启动，监听中...");
+                //}
             }
             catch (Exception ex)
             {
                 _logger.Error($"启动异常: {ex.Message}");
-
                 Stop();
             }
 
@@ -91,13 +100,34 @@ namespace aoi_common.Services
                 byte[] data = Encoding.UTF8.GetBytes(message);
                 if (_currentProtocol == CommProtocol.TCP)
                 {
-                    if (_tcpClient != null && _tcpClient.Connected)
+                    //Server 模式：通过保存的客户端发送
+                    if (_currentRole == CommRole.Server)
                     {
-                        await _tcpClient.GetStream().WriteAsync(data, 0, data.Length, _cts.Token);
+                        if (_tcpServerClient != null && _tcpServerClient.Connected)
+                        {
+                            await _tcpServerClient.GetStream().WriteAsync(data, 0, data.Length, _cts.Token);
+                            _logger.Information("[TCP Server] 已发送消息");
+                        }
+                        else
+                        {
+                            _logger.Error("发送失败：TCP Server 客户端连接不可用");
+                        }
                     }
-                    else _logger.Error("发送失败：TCP 未连接");
+                    //Client 模式：通过客户端连接发送
+                    else
+                    {
+                        if (_tcpClient != null && _tcpClient.Connected)
+                        {
+                            await _tcpClient.GetStream().WriteAsync(data, 0, data.Length, _cts.Token);
+                            _logger.Information("[TCP Client] 已发送消息");
+                        }
+                        else
+                        {
+                            _logger.Error("发送失败：TCP Client 未连接");
+                        }
+                    }
                 }
-                else // UDP
+                else //UDP
                 {
                     if (_udpClient != null && _remoteEndPoint != null)
                     {
@@ -111,11 +141,14 @@ namespace aoi_common.Services
 
         public void Stop()
         {
+            if (!IsActive) return;
             IsActive = false;
+            ConnectionStatusChanged?.Invoke(false);
             _cts?.Cancel();
 
             _tcpServer?.Stop();
             _tcpClient?.Close();
+            _tcpServerClient?.Close();  //关闭Server端的客户端连接
             _udpClient?.Close();
 
             _tcpServer = null;
@@ -140,23 +173,27 @@ namespace aoi_common.Services
                     try
                     {
                         var client = await _tcpServer.AcceptTcpClientAsync();
-
+                        string clientAddr = client.Client.RemoteEndPoint.ToString();
+                        _logger.Information("[TCP Server] 客户端已接入: {ClientAddr}", clientAddr);
+                        _tcpServerClient = client;
                         if (!IsActive)
                         {
                             IsActive = true;
-                            ConnectionStatusChanged?.Invoke(true);  // 通知UI
-                            _logger.Information("[TCP Server]客户端已接入，连接激活");
+                            ConnectionStatusChanged?.Invoke(true);
+                            _logger.Information("[TCP Server] 客户端已连接，标记为活跃连接");
                         }
-                        else
-                        {
-                            client.Close();
-                            _logger.Warning("[TCP Server]已有活跃连接，拒绝新连接");
-                            continue;
-                        }
-
                         _ = Task.Run(() => HandleTcpConnection(client, _cts.Token));
                     }
-                    catch { break; }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.Information("[TCP Server] 服务已停止");
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "[TCP Server] 异常");
+                        break;
+                    }
                 }
             }, _cts.Token);
         }
@@ -202,23 +239,42 @@ namespace aoi_common.Services
 
         private async Task HandleTcpClientReceive(CancellationToken token)
         {
-            var stream = _tcpClient.GetStream();
-            byte[] buffer = new byte[4096];
-            while (!token.IsCancellationRequested && _tcpClient.Connected)
+            try
             {
-                try
+                var stream = _tcpClient.GetStream();
+                byte[] buffer = new byte[4096];
+                while (!token.IsCancellationRequested && _tcpClient.Connected)
                 {
-                    int read = await stream.ReadAsync(buffer, 0, buffer.Length, token);
-                    if (read == 0) break;  // 连接断开
+                    try
+                    {
+                        int read = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                        if (read == 0)
+                        {
+                            _logger.Information("[TCP Client] 服务器主动断开连接");
+                            break;
+                        }
 
-                    string message = Encoding.UTF8.GetString(buffer, 0, read);
-                    MessageReceived?.Invoke("Server", message);
+                        string message = Encoding.UTF8.GetString(buffer, 0, read);
+                        MessageReceived?.Invoke("Server", message);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "[TCP Client] 读取数据出错");
+                        break;
+                    }
                 }
-                catch { break; }
             }
-            IsActive = false;
-            ConnectionStatusChanged?.Invoke(false);
-            _logger.Information("[TCP Client] 与服务器断开连接");
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "[TCP Client] 接收处理异常");
+            }
+            finally
+            {
+                //断开时触发事件
+                IsActive = false;
+                ConnectionStatusChanged?.Invoke(false);
+                _logger.Information("[TCP Client] 与服务器断开连接");
+            }
         }
 
         private async Task HandleTcpConnection(TcpClient client, CancellationToken token)
@@ -246,6 +302,7 @@ namespace aoi_common.Services
             }
             finally
             {
+                _tcpServerClient = null;
                 IsActive = false;
                 ConnectionStatusChanged?.Invoke(false);
                 RaiseLogMessage($"[TCP Server] 客户端已断开: {remote}");

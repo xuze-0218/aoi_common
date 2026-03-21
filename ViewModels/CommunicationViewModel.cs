@@ -59,50 +59,27 @@ namespace aoi_common.ViewModels
         {
             _logger = logger;
             _service = service;
-            IsConnected = _service.IsActive;
-            UpdateStatusMessage();
-
-            // 订阅日志消息事件
-            _service.LogMessage += m => App.Current.Dispatcher.Invoke(() =>
-            {
-                Logs.Insert(0, $"{DateTime.Now:HH:mm:ss} {m}");
-            });
-
-            // 订阅接收消息事件
-            _service.MessageReceived += (s, m) => HandleMessage(s, m);
-
-            _service.ConnectionStatusChanged += isConnected =>
-            {
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    IsConnected = isConnected;
-                    UpdateStatusMessage();
-                    UpdateCommandsCanExecute();
-                });
-            };
 
             ConnectCommand = new DelegateCommand(
-                () =>
-                {
-                    _service.Start(SelectedProtocol, SelectedRole, Ip, Port);
-                    IsConnected = _service.IsActive;
-                    UpdateStatusMessage();
-                    UpdateCommandsCanExecute();
-                },
-                () => !IsConnected);
-
-
+             () =>
+             {
+                 _logger.Debug("用户点击连接按钮");
+                 _service.Start(SelectedProtocol, SelectedRole, Ip, Port);
+                 //IsConnected = _service.IsActive;
+                 //UpdateStatusMessage();
+                 //UpdateCommandsCanExecute();
+             },
+             () => !IsConnected);
             DisconnectCommand = new DelegateCommand(
                 () =>
                 {
+                    _logger.Debug("断开连接按钮");
                     _service.Stop();
-                    IsConnected = _service.IsActive;
-                    UpdateStatusMessage();
-                    UpdateCommandsCanExecute();
+                    //IsConnected = _service.IsActive;
+                    //UpdateStatusMessage();
+                    //UpdateCommandsCanExecute();
                 },
                 () => IsConnected);
-
-
             SendCommand = new DelegateCommand(
                 async () =>
                 {
@@ -118,7 +95,6 @@ namespace aoi_common.ViewModels
                 },
                 () => IsConnected && !string.IsNullOrWhiteSpace(MessageInput))
                 .ObservesProperty(() => MessageInput);
-
             ClearCommand = new DelegateCommand(() =>
             {
                 Logs.Clear();
@@ -126,7 +102,6 @@ namespace aoi_common.ViewModels
                 ReceivedMessages.Clear();
                 _logger.Information("日志已清空");
             });
-
             SaveConfigCommand = new DelegateCommand(() =>
             {
                 _logger.Information("通讯配置已保存: {Protocol} {Role} {IP}:{Port}",
@@ -134,6 +109,36 @@ namespace aoi_common.ViewModels
                 StatusMessage = "配置已保存";
             });
 
+            _service.ConnectionStatusChanged += isConnected =>
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    IsConnected = isConnected;
+                    UpdateStatusMessage();
+                    UpdateCommandsCanExecute();
+                });
+            };
+
+
+            // 订阅日志消息事件
+            _service.LogMessage += m => App.Current.Dispatcher.Invoke(() =>
+            {
+                Logs.Insert(0, $"{DateTime.Now:HH:mm:ss} {m}");
+            });
+
+            // 订阅接收消息事件
+            _service.MessageReceived += (s, m) => HandleMessage(s, m);
+
+           
+          
+
+            bool currentState = _service.IsActive;
+            IsConnected = currentState;
+            UpdateStatusMessage();
+            UpdateCommandsCanExecute();
+            _logger.Information("ViewModel 初始化，当前连接状态: {IsConnected}", currentState);
+
+           
             _logger.Information("通讯配置界面已打开");
         }
 

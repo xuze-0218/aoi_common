@@ -175,7 +175,7 @@
                     Background="LimeGreen"
                     Command="{Binding SendCommand}"
                     Content="发送"
-                    Foreground="White" />
+                    Foreground="Black" />
 
                 <Button
                     Width="80"
