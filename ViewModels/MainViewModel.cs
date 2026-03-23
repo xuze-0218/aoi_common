@@ -19,11 +19,13 @@ namespace aoi_common.ViewModels
 {
     public class MainViewModel : BindableBase
     {
+        private readonly ICameraConfigService _cameraService;
         private readonly IVisionService _visionService;
         private readonly IDialogService _dialogService;
         private readonly ILogger _logger;
         public ObservableCollection<LogEventModel> LogSource => UiLogSink.LogCollection;
         public DelegateCommand OpenDebugCommand { get; private set; }
+        public DelegateCommand CameraDebugCommand { get; private set; }
         public DelegateCommand ParaDebugCommand { get; private set; }
         public DelegateCommand CommunicateDebugCommand { get; private set; }
         public DelegateCommand ImportImageCommand { get; private set; }
@@ -31,8 +33,10 @@ namespace aoi_common.ViewModels
         public ICommand RunFolderBatchCommand { get; private set; }
         public DelegateCommand RunCommand { get; private set; }
 
-        public MainViewModel(IVisionService visionService, IDialogService dialogService, ILogger logger)
+        public MainViewModel(IVisionService visionService, IDialogService dialogService,ICameraConfigService cameraService, ILogger logger)
         {
+            
+            _cameraService = cameraService;
             _visionService = visionService;
             _dialogService = dialogService;
             _logger = logger;
@@ -47,6 +51,10 @@ namespace aoi_common.ViewModels
             OpenDebugCommand = new DelegateCommand(
                 () => { _dialogService.Show("AlgorithmDebugView", new DialogParameters(), r => { }); },
                 () => _visionService.IsInitialized);
+
+            CameraDebugCommand = new DelegateCommand(
+                () => { _dialogService.Show("CameraDebugView", new DialogParameters(), r => { }); },
+                () => _cameraService.IsInitialized);
 
             ParaDebugCommand = new DelegateCommand(
                 () => { _dialogService.Show("ParamConfigView", new DialogParameters(), r => { }); });

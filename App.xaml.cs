@@ -40,7 +40,7 @@ namespace aoi_common
             // 注册应用启动服务
             containerRegistry.RegisterSingleton<IApplicationStartupService, ApplicationStartupService>();
             //相机调试
-            containerRegistry.RegisterForNavigation<CameraDebugView, CameraDebugViewModel>();
+            containerRegistry.RegisterDialog<CameraDebugView, CameraDebugViewModel>(); 
             //程序调试
             containerRegistry.RegisterDialog<AlgorithmDebugView, AlgorithmDebugViewModel>();
             //参数配置逻辑

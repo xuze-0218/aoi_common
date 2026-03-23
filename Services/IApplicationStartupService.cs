@@ -84,7 +84,7 @@ namespace aoi_common.Services
 
         private async Task InitializeCameraAsync()
         {
-            _logger.Information("开始初始化相机配置...");
+            _logger.Debug("开始初始化相机配置...");
 
             try
             {
@@ -94,11 +94,11 @@ namespace aoi_common.Services
 
                 if (configLoaded)
                 {
-                    _logger.Information("相机配置已从本地文件加载");
+                    _logger.Debug("相机配置已从本地文件加载");
                 }
                 else
                 {
-                    _logger.Information("本地相机配置不存在，使用默认配置");
+                    _logger.Debug("本地相机配置不存在，使用默认配置");
                 }
             }
             catch (Exception ex)

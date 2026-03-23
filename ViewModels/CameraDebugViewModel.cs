@@ -2,6 +2,7 @@
 using Cognex.VisionPro;
 using Prism.Commands;
 using Prism.Mvvm;
+using Prism.Services.Dialogs;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -12,14 +13,17 @@ using System.Windows.Input;
 
 namespace aoi_common.ViewModels
 {
-    public class CameraDebugViewModel : BindableBase
+    public class CameraDebugViewModel : BindableBase, IDialogAware
     {
+
         private readonly ICameraConfigService _cameraConfigService;
         private readonly ILogger _logger;
 
         private CogAcqFifoTool _currentCogAcqFifoTool;
         private string _statusMessage = "就绪";
         private bool _isConfigLoaded = false;
+
+        public event Action<IDialogResult> RequestClose;
 
         public CogAcqFifoTool CurrentCogAcqFifoTool
         {
@@ -42,6 +46,8 @@ namespace aoi_common.ViewModels
         public ICommand LoadConfigCommand { get; private set; }
         public ICommand SaveConfigCommand { get; private set; }
         public ICommand ReloadDefaultCommand { get; private set; }
+
+        public string Title => "相机调试窗口";
 
         public CameraDebugViewModel(ICameraConfigService cameraConfigService, ILogger logger)
         {
@@ -70,6 +76,7 @@ namespace aoi_common.ViewModels
 
                 if (CurrentCogAcqFifoTool != null)
                 {
+                  
                     IsConfigLoaded = _cameraConfigService.IsInitialized;
                     StatusMessage = "相机已初始化";
                     _logger.Information("相机调试界面已初始化");
@@ -174,5 +181,11 @@ namespace aoi_common.ViewModels
             string defaultPath = _cameraConfigService.GetDefaultConfigPath();
             LoadConfigAsync(defaultPath);
         }
+
+        public bool CanCloseDialog() => true;
+
+        public void OnDialogClosed() => _logger.Information("ToolBlock调试窗口已关闭");
+
+        public void OnDialogOpened(IDialogParameters parameters) { }
     }
 }

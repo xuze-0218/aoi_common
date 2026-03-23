@@ -1,4 +1,5 @@
-﻿using System;
+﻿using aoi_common.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,9 +21,14 @@ namespace aoi_common.Views
     /// </summary>
     public partial class CameraDebugView : UserControl
     {
-        public CameraDebugView()
+        public CameraDebugView(ICameraConfigService cameraService)
         {
             InitializeComponent();
+            if (cameraService.CurrentCogAcqFifoTool != null)
+            {
+                cogAcqFifoEditV2.Subject = cameraService.CurrentCogAcqFifoTool;
+            }
+            this.Unloaded += (s, e) => { cogAcqFifoEditV2.Subject = null; };
         }
     }
 }
