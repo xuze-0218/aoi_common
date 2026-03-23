@@ -1,9 +1,6 @@
 ﻿using aoi_common.Models;
 using Serilog;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace aoi_common.Services
@@ -20,7 +17,7 @@ namespace aoi_common.Services
         private readonly ICommunicationService _communicationService;
         private readonly ICameraConfigService _cameraConfigService;
         private readonly IVisionService _visionService;
-        private readonly IParametersConfigService _configService;
+        //private readonly IParametersConfigService _configService;
         private readonly ILogger _logger;
 
         public ApplicationStartupService(ICameraConfigService cameraConfigService, IVisionService visionService,
@@ -32,7 +29,7 @@ namespace aoi_common.Services
             _logger = logger;
             _detectionLogicService = detectionLogicService;
             _communicationService = communicationService;
-            _configService = configService;
+            //_configService = configService;
         }
 
         public async Task InitializeAsync()
@@ -61,24 +58,10 @@ namespace aoi_common.Services
 
             try
             {
-
-                //CommProtocol protocol = CommProtocol.TCP;
-                //CommRole role = CommRole.Server;
-                //string ip = "127.0.0.1";
-                //int port = 5000;
-                //_logger.Information("通讯配置 - 协议: {Protocol}, 角色: {Role}, IP: {IP}, 端口: {Port}",
-                //    protocol, role, ip, port);
-
-                CommProtocol protocol = GetCommProtocol();
-                CommRole role = GetCommRole();
-                string ip = GetCommIp();
-                int port = GetCommPort();
-                _logger.Information("通讯配置-协议: {Protocol}, 角色: {Role}, IP: {IP}, 端口: {Port}", protocol, role, ip, port);
-
-                _communicationService.Start(protocol, role, ip, port);
+                _communicationService.Start();
                 _communicationService.MessageReceived += (sender, message) =>
                 {
-                    _logger.Information("接收来自 {Sender} 的消息: {Message}", sender, message);
+                    _logger.Debug("接收来自 {Sender} 的消息: {Message}", sender, message);
                     try
                     {
                         _detectionLogicService.ProcessPlcData(message);
@@ -153,68 +136,6 @@ namespace aoi_common.Services
                 _logger.Error(ex, "初始化VisionService失败");
                 throw;
             }
-        }
-
-
-        private CommProtocol GetCommProtocol()
-        {
-            try
-            {
-                string protocolStr = _configService.GetString("Communication", "Protocol", "TCP");
-                if (Enum.TryParse<CommProtocol>(protocolStr, out var protocol))
-                {
-                    return protocol;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning(ex, "读取通讯协议配置失败，使用默认值");
-            }
-            return CommProtocol.TCP;
-        }
-
-        private CommRole GetCommRole()
-        {
-            try
-            {
-                string roleStr = _configService.GetString("Communication", "Role", "Server");
-                if (Enum.TryParse<CommRole>(roleStr, out var role))
-                {
-                    return role;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning(ex, "读取通讯角色配置失败，使用默认值");
-            }
-            return CommRole.Server;
-        }
-
-        private string GetCommIp()
-        {
-            try
-            {
-                return _configService.GetString("Communication", "IP", "127.0.0.1");
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning(ex, "读取IP配置失败，使用默认值");
-                return "127.0.0.1";
-            }
-        }
-
-        private int GetCommPort()
-        {
-            try
-            {
-                return _configService.GetInt("Communication", "Port", 5000);
-
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning(ex, "读取端口配置失败，使用默认值");
-            }
-            return 5000;
         }
 
         public async Task ShutdownAsync()

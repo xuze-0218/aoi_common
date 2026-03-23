@@ -9,6 +9,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    Width="800"
+    Height="600"
     MinWidth="600"
     MinHeight="600"
     prism:ViewModelLocator.AutoWireViewModel="True"
@@ -120,49 +122,42 @@
                 Padding="5"
                 Header="发送消息">
                 <TextBox
-                    Grid.Row="0"
                     AcceptsReturn="True"
-                    Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}" />
+                    Text="{Binding MessageInput, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap" />
             </GroupBox>
 
             <GridSplitter
                 Grid.Column="1"
                 Width="5"
                 HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" />
-
+                VerticalAlignment="Stretch"
+                Background="#ccc" />
             <GroupBox
                 Grid.Column="2"
                 Padding="5"
                 Header="接收消息">
-                <ListBox
+                <TextBox
+                    x:Name="ReceivedTextLog"
+                    AcceptsReturn="True"
                     Background="#2D2D30"
-                    Foreground="White"
-                    ItemsSource="{Binding ReceivedMessages}"
-                    ScrollViewer.CanContentScroll="False">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock
-                                Margin="0,2"
-                                Foreground="Cyan"
-                                Text="{Binding DisplayText}"
-                                TextWrapping="Wrap" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                    BorderThickness="0"
+                    FontFamily="Consolas"
+                    Foreground="Cyan"
+                    HorizontalScrollBarVisibility="Disabled"
+                    IsReadOnly="True"
+                    Text="{Binding ReceivedMessagesText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextChanged="ReceivedTextLog_TextChanged"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
             </GroupBox>
         </Grid>
 
         <Grid Grid.Row="2" Margin="0,10,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBox
-                Grid.Row="0"
-                AcceptsReturn="True"
-                Text="{Binding MessageInput}" />
 
             <WrapPanel
                 Grid.Row="1"

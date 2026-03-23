@@ -7,8 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace aoi_common.Services
 {
@@ -16,7 +15,9 @@ namespace aoi_common.Services
     {
         ObservableCollection<ParametersConfig> ConfigParams { get; }
         void LoadConfig();
+        bool SaveConfig();
         bool SaveConfig(IEnumerable<ParametersConfig> configs);
+        void UpdateParam(string moduleName, string paramName, string value, ParamOutputType type = ParamOutputType.STRING);
         int GetInt(string moduleName, string paramName, int defaultValue = 0);
         float GetFloat(string moduleName, string paramName, float defaultValue = 0f);
         string GetString(string moduleName, string paramName, string defaultValue = "");
@@ -63,6 +64,26 @@ namespace aoi_common.Services
             return defaultValue;
         }
 
+        public void UpdateParam(string moduleName, string paramName, string value, ParamOutputType type = ParamOutputType.STRING)
+        {
+            var p = FindParam(moduleName, paramName);
+            if (p != null)
+            {
+                p.InitValue = value;
+                p.OutputType = type; // 可选：更新类型
+            }
+            else
+            {
+                ConfigParams.Add(new ParametersConfig
+                {
+                    ModuleName = moduleName,
+                    Name = paramName,
+                    InitValue = value,
+                    OutputType = type,
+                });
+            }
+        }
+
         public void LoadConfig()
         {
             if (File.Exists(_configPath))
@@ -102,6 +123,11 @@ namespace aoi_common.Services
                 Log.Error(ex, "配置保存失败");
                 return false;
             }
+        }
+
+        public bool SaveConfig()
+        {
+            return SaveConfig(this.ConfigParams);
         }
 
         private ParametersConfig FindParam(string moduleName, string paramName)

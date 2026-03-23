@@ -17,6 +17,7 @@ namespace aoi_common.Services
     {
         bool IsActive { get; }
         void Start(CommProtocol protocol, CommRole role, string ip, int port);
+        void Start();
         void Stop();
         Task SendAsync(string message);
 
@@ -28,8 +29,9 @@ namespace aoi_common.Services
     public class CommunicationService : ICommunicationService, IDisposable
     {
         private ILogger _logger;
+        private IParametersConfigService _configService;
         private TcpListener _tcpServer;
-        private TcpClient _tcpServerClient;  // ✅ 保存 Server 端接受的客户端
+        private TcpClient _tcpServerClient;  // 保存 Server 端接受的客户端
         private TcpClient _tcpClient;        // 保存 Client 模式的连接
         private UdpClient _udpClient;
         private IPEndPoint _remoteEndPoint;
@@ -47,9 +49,10 @@ namespace aoi_common.Services
         public event Action<bool> ConnectionStatusChanged;
 
 
-        public CommunicationService(ILogger logger)
+        public CommunicationService(ILogger logger, IParametersConfigService configService)
         {
             _logger = logger;
+            _configService = configService;
         }
 
         public void Start(CommProtocol protocol, CommRole role, string ip, int port)
@@ -89,6 +92,23 @@ namespace aoi_common.Services
                 Stop();
             }
 
+        }
+
+        public void Start() 
+        {
+            _logger.Information("正在从配置服务加载参数并启动通讯...");          
+            var protocol = GetConfigEnum<CommProtocol>("Protocol", CommProtocol.TCP);
+            var role = GetConfigEnum<CommRole>("Role", CommRole.Server);
+            var ip = _configService.GetString("Communication", "IP", "127.0.0.1");
+            var port = _configService.GetInt("Communication", "Port", 5000);
+            _logger.Information("加载配置成功: {Protocol} {Role} {IP}:{Port}", protocol, role, ip, port);           
+            Start(protocol, role, ip, port);
+        }
+
+        private T GetConfigEnum<T>(string key, T defaultValue) where T : struct
+        {
+            string val = _configService.GetString("Communication", key, defaultValue.ToString());
+            return Enum.TryParse<T>(val, out var result) ? result : defaultValue;
         }
 
         public async Task SendAsync(string message)
@@ -218,6 +238,7 @@ namespace aoi_common.Services
                             {
                                 await connectTask;
                                 IsActive = true;
+                                ConnectionStatusChanged?.Invoke(true);
                                 _logger.Information("[TCP Client] 连接成功");
                                 await HandleTcpClientReceive(_cts.Token);
                             }

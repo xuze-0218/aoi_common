@@ -24,5 +24,13 @@ namespace aoi_common.Views
         {
             InitializeComponent();
         }
+
+        private void ReceivedTextLog_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                textBox.ScrollToEnd();
+            }
+        }
     }
 }

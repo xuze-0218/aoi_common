@@ -114,7 +114,7 @@ namespace aoi_common.ViewModels
             {
                 try
                 {
-                    _visionService.RunTool();
+                    _visionService.RunToolOnline();
                 }
                 catch (Exception ex)
                 {
