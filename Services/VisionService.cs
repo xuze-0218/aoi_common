@@ -47,6 +47,39 @@ namespace aoi_common.Services
             //_acqFifo = cameraService.CurrentCogAcqFifoTool.Operator;
             //ICogAcqExposure exposure = _acqFifo.OwnedExposureParams;
             _imageFileTool = new CogImageFileTool();
+            if (_cameraService!=null)
+            {
+                _cameraService.OnImageCaptured += HandleImageCaptured;
+            }
+        }
+
+        private void HandleImageCaptured(ICogImage image)
+        {
+            if (image == null)
+            {
+                _logger.Warning("【事件处理】接收到空图像");
+                return;
+            }
+
+            try
+            {
+                _logger.Information("【事件处理】接收采集完成事件，开始检测");
+
+                if (toolBlock == null)
+                {
+                    _logger.Error("【事件处理】ToolBlock未初始化");
+                    return;
+                }
+
+                SetToolBlockInputImage(image);
+                toolBlock.Run();
+
+                _logger.Information("【事件处理】检测完成");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "【事件处理】检测异常");
+            }
         }
 
         public async Task InitialAsync(string path)
@@ -147,36 +180,12 @@ namespace aoi_common.Services
             }
             try
             {
-                _logger.Debug("【在线模式】运行");
-
-                ICogImage currentImage = null;
+                _logger.Information("【在线模式】手动触发");
                 if (_cameraService != null && _cameraService.IsReady())
                 {
-                    _logger.Debug("【在线模式】从相机获取图像");
+                    _logger.Debug("【在线模式】启动相机采集");
                     _cameraService.StartCapture();
-
-                    if (currentImage == null)
-                    {
-                        _logger.Warning("【在线模式】相机采集失败，尝试使用备用方案");
-                        currentImage = TryGetFallbackImage();
-                    }
                 }
-                else
-                {
-                    _logger.Warning("【在线模式】相机未就绪，使用备用方案");
-                    currentImage = TryGetFallbackImage();
-                }
-
-                if (currentImage == null)
-                {
-                    _logger.Error("【在线模式】无法获取输入图像，运行失败");
-                    return;
-                }
-
-                SetToolBlockInputImage(currentImage);
-                toolBlock.Run();
-
-                _logger.Information("【在线模式】完成");
             }
             catch (Exception ex)
             {
@@ -189,29 +198,6 @@ namespace aoi_common.Services
             //var vvv = toolBlock.Tools.Contains(db);
         }
 
-        private ICogImage TryGetFallbackImage()
-        {
-            try
-            {
-                _logger.Debug("【备用方案】使用文件工具");
-                _imageFileTool.Run();
-                ICogImage image = _imageFileTool.OutputImage;
-
-                if (image != null)
-                {
-                    _logger.Information("【备用方案】成功");
-                    return image;
-                }
-
-                _logger.Error("【备用方案】失败");
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "【备用方案】异常");
-                return null;
-            }
-        }
 
         private void SetToolBlockInputImage(ICogImage image)
         {
@@ -318,6 +304,14 @@ namespace aoi_common.Services
                     measures[i].Mode = CogBlobMeasureModeConstants.Filter; // 确保开启了过滤模式
                     break;
                 }
+            }
+        }
+
+        ~VisionService()
+        {
+            if (_cameraService != null)
+            {
+                _cameraService.OnImageCaptured -= HandleImageCaptured;
             }
         }
     }

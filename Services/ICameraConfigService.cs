@@ -37,7 +37,8 @@ namespace aoi_common.Services
         /// 启动采集  非阻塞
         /// PLC触发或用户点击
         /// </summary>
-        void StartCapture();      
+        void StartCapture();
+        event Action<ICogImage> OnImageCaptured;
 
     }
 
@@ -50,7 +51,7 @@ namespace aoi_common.Services
 
         public CogAcqFifoTool CurrentCogAcqFifoTool => _cogAcqFifoTool;
         public ICogAcqFifo CurrentCogAcqFifo => _cogAcqFifoTool?.Operator as ICogAcqFifo;
-
+        public event Action<ICogImage> OnImageCaptured;
         public CameraConfigService(ILogger logger)
         {
             _logger = logger;
@@ -60,13 +61,35 @@ namespace aoi_common.Services
 
         private void CurrentCogAcqFifo_Complete(object sender, CogCompleteEventArgs e)
         {
-            int numPending, numReady;
-            bool isBusy;
-            CurrentCogAcqFifo.GetFifoState(out numPending, out numReady, out isBusy);
-            if (numReady > 0)
+            try
             {
-                CogAcqInfo info = new CogAcqInfo();
-                ICogImage image = CurrentCogAcqFifo.CompleteAcquireEx(info);
+                int numPending, numReady;
+                bool isBusy;
+                CurrentCogAcqFifo.GetFifoState(out numPending, out numReady, out isBusy);
+
+                if (numReady > 0)
+                {
+                    CogAcqInfo info = new CogAcqInfo();
+                    ICogImage image = CurrentCogAcqFifo.CompleteAcquireEx(info);
+
+                    if (image != null)
+                    {
+                        _logger.Information("【采集完成】已获取图像，触发事件");
+                        OnImageCaptured?.Invoke(image);
+                    }
+                    else
+                    {
+                        _logger.Warning("【采集完成】图像为空");
+                    }
+                }
+                else
+                {
+                    _logger.Warning("【采集完成】FIFO中无数据");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "【采集完成事件】异常");
             }
         }
 
