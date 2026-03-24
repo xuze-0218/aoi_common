@@ -34,49 +34,60 @@
 
         <StackPanel
             Grid.Row="1"
-            Background="#2D2D30"
+            Margin="0"
+            Background="#F0F0F0"
             Orientation="Horizontal">
-            <!--  单张离线测试  -->
             <Button
-                Width="120"
-                Height="30"
-                Margin="5"
-                Background="Orange"
-                Command="{Binding RunSingleImageCommand}"
-                Content="单张测试"
+                Width="110"
+                Height="35"
+                Margin="0,0,5,0"
+                Background="#DC3545"
+                Command="{Binding OfflineSingleImageCommand}"
+                Content="⏸ 离线单张"
+                FontSize="12"
                 Foreground="White"
-                ToolTip="选择单个图像文件进行测试" />
+                ToolTip="选择单张图像进行离线测试" />
 
-            <!--  文件夹批量测试  -->
             <Button
-                Width="120"
-                Height="30"
-                Margin="5"
-                Background="Purple"
-                Command="{Binding RunFolderBatchCommand}"
-                Content="批量测试"
+                Width="110"
+                Height="35"
+                Margin="0,0,5,0"
+                Background="#DC3545"
+                Command="{Binding OfflineFolderBatchCommand}"
+                Content="⏸ 离线文件夹"
+                FontSize="12"
                 Foreground="White"
-                ToolTip="选择文件夹，对所有图像进行批量测试" />
+                ToolTip="选择文件夹进行批量离线测试" />
 
-            <!--  单次测试（实时）  -->
             <Button
-                Width="100"
-                Height="30"
-                Margin="5"
-                Background="Green"
-                Command="{Binding RunCommand}"
-                Content="单次运行"
+                Width="110"
+                Height="35"
+                Margin="0,0,5,0"
+                Background="#28A745"
+                Command="{Binding OnlineStartCommand}"
+                Content="▶ 在线测试"
+                FontSize="12"
                 Foreground="White"
-                ToolTip="处理当前加载的图像" />
+                ToolTip="启动在线模式，等待 PLC 信号" />
 
-            <Separator Margin="10,5" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+            <Button
+                Width="110"
+                Height="35"
+                Margin="0,0,5,0"
+                Background="#6C757D"
+                Command="{Binding OnlineStopCommand}"
+                Content="⏹ 停止"
+                FontSize="12"
+                Foreground="Black"
+                IsEnabled="{Binding IsOnlineRunning}"
+                ToolTip="停止在线模式" />
 
             <TextBlock
-                Margin="10,0"
+                Margin="20,0,0,0"
                 VerticalAlignment="Center"
-                Foreground="White">
-                状态:<Run Foreground="LightGreen" Text="就绪" />
-            </TextBlock>
+                FontSize="12"
+                Foreground="#333"
+                Text="{Binding IsOnlineMode, StringFormat='当前模式：{0}'}" />
         </StackPanel>
 
         <Grid Grid.Row="2">

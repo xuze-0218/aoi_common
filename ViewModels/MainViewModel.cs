@@ -23,15 +23,39 @@ namespace aoi_common.ViewModels
         private readonly IVisionService _visionService;
         private readonly IDialogService _dialogService;
         private readonly ILogger _logger;
+
+        /// <summary>
+        /// 当前运行模式
+        /// </summary>
+        private bool _isOnlineMode;
+        public bool IsOnlineMode
+        {
+            get => _isOnlineMode;
+            set => SetProperty(ref _isOnlineMode, value);
+        }
+
+        /// <summary>
+        /// 按钮启用状态
+        /// </summary>
+        private bool _isOnlineRunning;
+        public bool IsOnlineRunning
+        {
+            get => _isOnlineRunning;
+            set => SetProperty(ref _isOnlineRunning, value);
+        }
+
         public ObservableCollection<LogEventModel> LogSource => UiLogSink.LogCollection;
         public DelegateCommand OpenDebugCommand { get; private set; }
         public DelegateCommand CameraDebugCommand { get; private set; }
         public DelegateCommand ParaDebugCommand { get; private set; }
         public DelegateCommand CommunicateDebugCommand { get; private set; }
         public DelegateCommand ImportImageCommand { get; private set; }
-        public ICommand RunSingleImageCommand { get; private set; }
-        public ICommand RunFolderBatchCommand { get; private set; }
-        public DelegateCommand RunCommand { get; private set; }
+
+        public DelegateCommand OfflineSingleImageCommand { get; private set; }      // 离线单张
+        public DelegateCommand OfflineFolderBatchCommand { get; private set; }      // 离线文件夹
+        public DelegateCommand OnlineStartCommand { get; private set; }             // 在线测试
+        public DelegateCommand OnlineStopCommand { get; private set; }              // 在线停止
+
 
         public MainViewModel(IVisionService visionService, IDialogService dialogService, ICameraConfigService cameraService, ILogger logger)
         {
@@ -62,7 +86,7 @@ namespace aoi_common.ViewModels
             CommunicateDebugCommand = new DelegateCommand(
                 () => { _dialogService.Show("CommunicationView", new DialogParameters(), r => { }); });
 
-            RunSingleImageCommand = new DelegateCommand(() =>
+            OfflineSingleImageCommand = new DelegateCommand(() =>
             {
                 var ofd = new Microsoft.Win32.OpenFileDialog
                 {
@@ -73,7 +97,7 @@ namespace aoi_common.ViewModels
                 {
                     try
                     {
-                        _logger.Information("开始单张图像测试: {FilePath}", ofd.FileName);
+                        _logger.Debug("开始单张图像测试: {FilePath}", ofd.FileName);
                         LocalFileImageSource imageSource = new LocalFileImageSource(ofd.FileName, _logger);
                         _visionService.RunToolWithImageSource(imageSource);
                         imageSource.Dispose();
@@ -86,7 +110,7 @@ namespace aoi_common.ViewModels
                 }
             });
 
-            RunFolderBatchCommand = new DelegateCommand(() =>
+            OfflineFolderBatchCommand = new DelegateCommand(() =>
             {
                 var dialog = new System.Windows.Forms.FolderBrowserDialog
                 {
@@ -97,38 +121,61 @@ namespace aoi_common.ViewModels
                 {
                     try
                     {
-                        _logger.Information("开始批量测试: {FolderPath}", dialog.SelectedPath);
+                        _logger.Information("【离线模式】开始批量测试: {FolderPath}", dialog.SelectedPath);
+                        IsOnlineMode = false;
                         LocalFolderImageSource imageSource = new LocalFolderImageSource(dialog.SelectedPath, _logger);
-
                         if (imageSource.TotalCount == 0)
                         {
-                            _logger.Warning("文件夹中没有支持的图像文件");
+                            _logger.Warning("【离线模式】文件夹中没有支持的图像文件");
                             return;
                         }
 
-                        _logger.Information("共找到 {Count} 张图像，开始处理...", imageSource.TotalCount);
+                        _logger.Information("【离线模式】共找到 {Count} 张图像，开始处理...", imageSource.TotalCount);
                         _visionService.RunToolWithImageSource(imageSource);
                         imageSource.Dispose();
-                        _logger.Information("文件夹批量测试完成");
+
+                        _logger.Information("【离线模式】批量测试完成");
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error(ex, "文件夹批量测试失败");
+                        _logger.Error(ex, "【离线模式】批量测试失败");
                     }
                 }
             });
 
-            RunCommand = new DelegateCommand(() =>
+            OnlineStartCommand = new DelegateCommand(() =>
             {
                 try
                 {
+                    _logger.Information("【在线模式】启动");
+                    IsOnlineMode = true;
+                    IsOnlineRunning = true;
                     _visionService.RunToolOnline();
+                    _logger.Information("【在线模式】已启动，等待 PLC 信号或进行测试拍照");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex, "单次测试失败");
+                    _logger.Error(ex, "【在线模式】启动失败");
+                    IsOnlineRunning = false;
                 }
-            });
+            }, () => !IsOnlineRunning);
+
+            OnlineStopCommand = new DelegateCommand(() =>
+            {
+                try
+                {
+                    _logger.Information("【在线模式】停止");
+                    IsOnlineMode = false;
+                    IsOnlineRunning = false;
+
+                    _logger.Information("【在线模式】已停止");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "【在线模式】停止失败");
+                }
+            }, () => IsOnlineRunning);
+         
         }
 
         private async void MonitorStatus()
