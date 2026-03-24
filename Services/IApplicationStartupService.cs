@@ -34,7 +34,7 @@ namespace aoi_common.Services
 
         public async Task InitializeAsync()
         {
-            _logger.Information("开始应用初始化...");
+            _logger.Information("开始应用初始化");
 
             try
             {
@@ -54,7 +54,7 @@ namespace aoi_common.Services
 
         private async Task InitializeCommunicationAsync()
         {
-            _logger.Information("初始化通讯服务...");
+            _logger.Debug("初始化通讯服务");
 
             try
             {
@@ -84,7 +84,7 @@ namespace aoi_common.Services
 
         private async Task InitializeCameraAsync()
         {
-            _logger.Debug("开始初始化相机配置...");
+            _logger.Debug("开始初始化相机配置");
 
             try
             {
@@ -140,7 +140,7 @@ namespace aoi_common.Services
 
         public async Task ShutdownAsync()
         {
-            _logger.Information("应用关闭，保存相机配置...");
+            _logger.Information("应用关闭，保存相机配置");
 
             try
             {

@@ -25,9 +25,7 @@ namespace aoi_common.ViewModels
         private IParametersConfigService _configService;
         public ObservableCollection<ParametersConfig> Parameters => _configService.ConfigParams;
 
-        /// <summary>
-        /// 用于前端 DataGrid 绑定的视图，支持分组和过滤
-        /// </summary>
+       
         public ICollectionView ParametersView
         {
             get => _parametersView;

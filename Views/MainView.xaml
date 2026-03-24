@@ -86,7 +86,6 @@
                 FontSize="12"
                 FontWeight="Bold"
                 Foreground="Black"
-                IsEnabled="{Binding IsOnlineRunning}"
                 ToolTip="在线模式下手动触发一次拍照检测">
                 <Button.Style>
                     <Style TargetType="Button">
@@ -111,7 +110,6 @@
                 FontSize="12"
                 FontWeight="Bold"
                 Foreground="Black"
-                IsEnabled="{Binding IsOnlineRunning, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                 ToolTip="停止在线模式" />
 
             <TextBlock

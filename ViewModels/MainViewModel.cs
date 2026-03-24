@@ -41,8 +41,18 @@ namespace aoi_common.ViewModels
         public bool IsOnlineRunning
         {
             get => _isOnlineRunning;
-            set => SetProperty(ref _isOnlineRunning, value);
+            set
+            {
+                if (SetProperty(ref _isOnlineRunning, value))
+                {
+                    OnlineStartCommand?.RaiseCanExecuteChanged();
+                    OnlineStopCommand?.RaiseCanExecuteChanged();
+                    SnapCommand?.RaiseCanExecuteChanged();
+                }
+            }
         }
+
+
 
         public ObservableCollection<LogEventModel> LogSource => UiLogSink.LogCollection;
         public DelegateCommand OpenDebugCommand { get; private set; }
@@ -67,7 +77,7 @@ namespace aoi_common.ViewModels
             _logger = logger;
             InitializeCommands();
             MonitorStatus();
-            _logger.Information("AOI 系统主界面加载完成。");
+            _logger.Information("AOI系统界面加载完成");
 
         }
 
@@ -79,7 +89,7 @@ namespace aoi_common.ViewModels
 
             CameraDebugCommand = new DelegateCommand(
                 () => { _dialogService.Show("CameraDebugView", new DialogParameters(), r => { }); }
-                /*, () => _cameraService.IsInitialized*/);
+                /*, () => _cameraService.IsReady*/);
 
             ParaDebugCommand = new DelegateCommand(
                 () => { _dialogService.Show("ParamConfigView", new DialogParameters(), r => { }); });
@@ -98,13 +108,13 @@ namespace aoi_common.ViewModels
                 {
                     try
                     {
-                        _logger.Debug("开始单张图像测试: {FilePath}", ofd.FileName);
+                        _logger.Information("开始单张图像测试: {FilePath}", ofd.FileName);
                         ModeIndicator = "离线模式 - 单张";
                         IsOnlineRunning = false;
                         LocalFileImageSource imageSource = new LocalFileImageSource(ofd.FileName, _logger);
                         _visionService.RunToolWithImageSource(imageSource);
                         imageSource.Dispose();
-                        _logger.Information("单张图像测试完成");
+                        _logger.Debug("单张图像测试完成");
                     }
                     catch (Exception ex)
                     {
@@ -126,23 +136,23 @@ namespace aoi_common.ViewModels
                     {
                         ModeIndicator = "离线模式 - 批量";
                         IsOnlineRunning = false;
-                        _logger.Information("【离线模式】开始批量测试: {FolderPath}", dialog.SelectedPath);
+                        _logger.Information("开始批量测试: {FolderPath}", dialog.SelectedPath);
                         LocalFolderImageSource imageSource = new LocalFolderImageSource(dialog.SelectedPath, _logger);
                         if (imageSource.TotalCount == 0)
                         {
-                            _logger.Warning("【离线模式】文件夹中没有支持的图像文件");
+                            _logger.Warning("文件夹中没有支持的图像文件");
                             return;
                         }
 
-                        _logger.Information("【离线模式】共找到 {Count} 张图像，开始处理...", imageSource.TotalCount);
+                        _logger.Debug("共找到{Count}张图像,开始处理...", imageSource.TotalCount);
                         _visionService.RunToolWithImageSource(imageSource);
                         imageSource.Dispose();
 
-                        _logger.Information("【离线模式】批量测试完成");
+                        _logger.Debug("批量测试完成");
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error(ex, "【离线模式】批量测试失败");
+                        _logger.Error(ex, "批量测试失败");
                     }
                 }
             });
@@ -151,33 +161,33 @@ namespace aoi_common.ViewModels
             {
                 try
                 {
-                    _logger.Information("【在线模式】启动");
+                    _logger.Information("点击启动按钮");
                     IsOnlineRunning = true;
                     ModeIndicator = "在线模式 - 等待 PLC 信号或手动拍照";
                     //_visionService.RunToolOnline();
-                    _logger.Information("【在线模式】已启动，等待 PLC 信号或进行测试拍照");
+                    _logger.Information("在线模式已启动，等待PLC信号或测试拍照");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex, "【在线模式】启动失败");
+                    _logger.Error(ex, "在线模式启动失败");
                     IsOnlineRunning = false;
                     ModeIndicator = "离线模式";
                 }
-            }, 
-            () =>_visionService.IsInitialized && !IsOnlineRunning);
+            },
+            () => _visionService.IsInitialized && !IsOnlineRunning);
 
             OnlineStopCommand = new DelegateCommand(() =>
             {
                 try
                 {
-                    _logger.Information("【在线模式】停止");
+                    _logger.Debug("在线模式停止");
                     IsOnlineRunning = false;
                     ModeIndicator = "离线模式";
-                    _logger.Information("【停止】已退出在线模式");
+                    _logger.Information("已退出在线模式");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex, "【在线模式】停止失败");
+                    _logger.Error(ex, "在线模式停止失败");
                 }
             }, () => IsOnlineRunning);
 
@@ -216,7 +226,7 @@ namespace aoi_common.ViewModels
             OnlineStopCommand.RaiseCanExecuteChanged();
             SnapCommand.RaiseCanExecuteChanged();
             //ParaDebugCommand.RaiseCanExecuteChanged();
-            Log.Information("Vpp初始化完成，可打开调试窗口查看");
+            Log.Information("Vpp文件加载完成，可打开调试窗口查看");
         }
     }
 }

@@ -12,44 +12,23 @@ namespace aoi_common.Services
 {
     public interface IImageSource
     {
-        /// <summary>
-        /// 是否还有下一个图像
-        /// </summary>
         bool HasNext();
 
-        /// <summary>
-        /// 获取下一个图像
-        /// </summary>
         ICogImage GetNext();
 
-        /// <summary>
-        /// 获取当前图像名称
-        /// </summary>
         string GetCurrentImageName();
 
-        /// <summary>
-        /// 图像总数
-        /// </summary>
         int TotalCount { get; }
 
-        /// <summary>
-        /// 当前图像索引
-        /// </summary>
         int CurrentIndex { get; }
 
-        /// <summary>
-        /// 重置到开始
-        /// </summary>
         void Reset();
 
-        /// <summary>
-        /// 释放资源
-        /// </summary>
         void Dispose();
     }
 
     /// <summary>
-    /// 离线单文件
+    /// 离线文件
     /// </summary>
     public class LocalFileImageSource : IImageSource
     {
@@ -180,7 +159,7 @@ namespace aoi_common.Services
                 }
 
                 _imageFiles.Sort(); // 按文件名排序
-                _logger.Information("文件夹图像源初始化完成，共找到 {Count} 张图像", _imageFiles.Count);
+                _logger.Debug("文件夹图像源初始化完成，共找到 {Count} 张图像", _imageFiles.Count);
             }
             catch (Exception ex)
             {
@@ -208,7 +187,7 @@ namespace aoi_common.Services
                 _imageFileTool.Operator.Open(filePath, CogImageFileModeConstants.Read);
                 _imageFileTool.Run();
                 ICogImage image = _imageFileTool.OutputImage;
-                _logger.Information("加载图像 [{Current}/{Total}]: {FileName}", _currentIndex + 1, _imageFiles.Count, Path.GetFileName(filePath));
+                _logger.Debug("加载图像 [{Current}/{Total}]: {FileName}", _currentIndex + 1, _imageFiles.Count, Path.GetFileName(filePath));
                 return image;
             }
             catch (Exception ex)
@@ -252,5 +231,5 @@ namespace aoi_common.Services
         }
     }
 
-    
+
 }

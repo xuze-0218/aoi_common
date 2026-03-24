@@ -94,7 +94,6 @@ namespace aoi_common.ViewModels
         /// </summary>
         private void LoadConfig()
         {
-            // 打开文件对话框
             Microsoft.Win32.OpenFileDialog dialog = new Microsoft.Win32.OpenFileDialog();
             dialog.Filter = "VisionPro Config Files (*.vpp)|*.vpp|All Files (*.*)|*.*";
             dialog.DefaultExt = ".vpp";

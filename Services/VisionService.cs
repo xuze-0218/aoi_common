@@ -57,44 +57,44 @@ namespace aoi_common.Services
         {
             if (image == null)
             {
-                _logger.Warning("【事件处理】接收到空图像");
+                _logger.Warning("接收到空图像");
                 return;
             }
 
             try
             {
-                _logger.Information("【事件处理】接收采集完成事件，开始检测");
+                _logger.Debug("接收采集完成事件，开始检测");
 
                 if (toolBlock == null)
                 {
-                    _logger.Error("【事件处理】ToolBlock未初始化");
+                    _logger.Error("ToolBlock未初始化");
                     return;
                 }
 
                 SetToolBlockInputImage(image);
                 toolBlock.Run();
 
-                _logger.Information("【事件处理】检测完成");
+                _logger.Information("图像检测完成");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "【事件处理】检测异常");
+                _logger.Error(ex, "图像检测异常");
             }
         }
 
         public async Task InitialAsync(string path)
         {
             _isInitialized = false;
-            _logger.Information("VisionService开始初始化,加载vpp文件");
+            _logger.Debug("VisionService开始初始化,加载vpp文件");
             await Task.Run(() =>
             {
                 if (string.IsNullOrEmpty(path))
                 {
-                    throw new ArgumentNullException(nameof(path), "ToolBlock文件路径不能为空");
+                    throw new ArgumentNullException(nameof(path), "vpp文件路径不能为空");
                 }
                 if (!File.Exists(path))
                 {
-                    throw new FileNotFoundException(string.Format("ToolBlock文件不存在: {0}", path));
+                    throw new FileNotFoundException(string.Format("vpp文件不存在: {0}", path));
                 }
                 try
                 {
@@ -105,7 +105,7 @@ namespace aoi_common.Services
                     _isInitialized = true;
 
                     toolBlock.Ran += toolBlock_Ran;
-                    _logger.Information("ToolBlock加载成功");
+                    _logger.Information("vpp加载成功");
                 }
                 catch (Exception ex)
                 {
@@ -162,8 +162,8 @@ namespace aoi_common.Services
             {
                 _imageFileTool.Operator.Close();
                 _imageFileTool.Operator.Open(imagePath, CogImageFileModeConstants.Read);
-                _logger.Information("切换图像: {Path}", imagePath);
-                // RunTool();                 // 运行一次，以便界面刷新
+                _logger.Debug("切换图像: {Path}", imagePath);
+                // RunTool();                 // 运行一次,界面刷新
             }
             catch (Exception ex)
             {
@@ -175,21 +175,21 @@ namespace aoi_common.Services
         {
             if (toolBlock == null)
             {
-                _logger.Warning("ToolBlock 未初始化");
+                _logger.Warning("vpp未初始化");
                 return;
             }
             try
             {
-                _logger.Information("【在线模式】手动触发");
+                _logger.Information("触发拍照");
                 if (_cameraService != null && _cameraService.IsReady())
                 {
-                    _logger.Debug("【在线模式】启动相机采集");
+                    _logger.Debug("启动相机采集");
                     _cameraService.StartCapture();
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "【在线模式】异常");
+                _logger.Error(ex, "在线模式异常");
             }
             //int num = toolBlock.Tools["CogBlobTool1"].DataBindings.Count;
             //CogBlobTool tool = toolBlock.Tools["CogBlobTool1"] as CogBlobTool ;
@@ -215,8 +215,8 @@ namespace aoi_common.Services
         {
             if (toolBlock == null)
             {
-                _logger.Error("ToolBlock未初始化，无法运行");
-                throw new InvalidOperationException("ToolBlock未初始化");
+                _logger.Error("vpp未加载，无法运行");
+                throw new InvalidOperationException("vpp未加载");
             }
             if (imageSource == null)
             {
@@ -226,7 +226,7 @@ namespace aoi_common.Services
 
             try
             {
-                _logger.Information("开始使用图像源运行ToolBlock，共{Count}张图像", imageSource.TotalCount);
+                _logger.Information("本地测试,共{Count}张图像", imageSource.TotalCount);
                 imageSource.Reset();
 
                 while (imageSource.HasNext())
@@ -248,7 +248,7 @@ namespace aoi_common.Services
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "使用图像源运行ToolBlock失败");
+                _logger.Error(ex, "本地测试失败");
                 throw;
             }
         }
@@ -257,8 +257,8 @@ namespace aoi_common.Services
         {
             if (toolBlock == null)
             {
-                _logger.Error("ToolBlock未初始化，无法运行");
-                throw new InvalidOperationException("ToolBlock未初始化");
+                _logger.Error("vpp未初始化，无法运行");
+                throw new InvalidOperationException("vpp未初始化");
             }
 
             if (image == null)
@@ -278,7 +278,7 @@ namespace aoi_common.Services
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "运行ToolBlock失败");
+                _logger.Error(ex, "运行程序失败");
                 throw;
             }
         }
@@ -301,7 +301,7 @@ namespace aoi_common.Services
                 {
                     measures[i].FilterRangeLow = min;
                     measures[i].FilterRangeHigh = max;
-                    measures[i].Mode = CogBlobMeasureModeConstants.Filter; // 确保开启了过滤模式
+                    measures[i].Mode = CogBlobMeasureModeConstants.Filter; // 过滤模式
                     break;
                 }
             }

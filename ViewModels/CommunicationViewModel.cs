@@ -158,7 +158,7 @@ namespace aoi_common.ViewModels
             UpdateStatusMessage();
             UpdateCommandsCanExecute();
             _logger.Information("ViewModel 初始化，当前连接状态: {IsConnected}", currentState);
-            _logger.Information("通讯配置界面已打开");
+            _logger.Debug("通讯配置界面已打开");
            
         }
 

@@ -1,11 +1,7 @@
-﻿using aoi_common.Models;
-using Cognex.VisionPro;
+﻿using Cognex.VisionPro;
 using Serilog;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace aoi_common.Services
@@ -18,7 +14,7 @@ namespace aoi_common.Services
         CogAcqFifoTool CurrentCogAcqFifoTool { get; }
 
         /// <summary>
-        /// 获取当前的 ICogAcqFifo 接口（用于直接图像采集）
+        /// 获取当前的 ICogAcqFifo 接口
         /// </summary>
         ICogAcqFifo CurrentCogAcqFifo { get; }
         /// <summary>
@@ -74,22 +70,22 @@ namespace aoi_common.Services
 
                     if (image != null)
                     {
-                        _logger.Information("【采集完成】已获取图像，触发事件");
+                        _logger.Information("已获取图像");
                         OnImageCaptured?.Invoke(image);
                     }
                     else
                     {
-                        _logger.Warning("【采集完成】图像为空");
+                        _logger.Warning("图像为空");
                     }
                 }
                 else
                 {
-                    _logger.Warning("【采集完成】FIFO中无数据");
+                    _logger.Warning("FIFO队列中无数据");
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "【采集完成事件】异常");
+                _logger.Error(ex, "图像采集异常");
             }
         }
 
@@ -126,7 +122,7 @@ namespace aoi_common.Services
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "创建CogAcqFifoTool失败");
+                _logger.Error(ex, "创建采集对象失败");
                 throw;
             }
         }
@@ -148,7 +144,7 @@ namespace aoi_common.Services
                 {
                     _cogAcqFifoTool = (CogAcqFifoTool)CogSerializer.LoadObjectFromFile(configPath);
                     BindAcqFifoEvent();
-                    _logger.Information("成功加载相机配置: {ConfigPath}", configPath);
+                    _logger.Information("加载相机配置成功: {ConfigPath}", configPath);
                     return true;
                 }
                 catch (Exception ex)
@@ -165,7 +161,7 @@ namespace aoi_common.Services
             {
                 if (_cogAcqFifoTool == null)
                 {
-                    _logger.Warning("CogAcqFifoTool未初始化，无法保存配置");
+                    _logger.Warning("相机采集服务未初始化，无法保存配置");
                     return false;
                 }
 
@@ -179,7 +175,7 @@ namespace aoi_common.Services
                         Directory.CreateDirectory(directory);
 
                     CogSerializer.SaveObjectToFile(_cogAcqFifoTool, configPath);
-                    _logger.Information("成功保存相机配置: {ConfigPath}", configPath);
+                    _logger.Information("保存相机配置成功: {ConfigPath}", configPath);
                     return true;
                 }
                 catch (Exception ex)

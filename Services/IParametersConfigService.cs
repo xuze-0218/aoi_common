@@ -70,7 +70,7 @@ namespace aoi_common.Services
             if (p != null)
             {
                 p.InitValue = value;
-                p.OutputType = type; // 可选：更新类型
+                p.OutputType = type; 
             }
             else
             {
