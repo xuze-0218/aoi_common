@@ -204,7 +204,6 @@
     <Compile Include="Common\BoolToColorConverter.cs" />
     <Compile Include="Common\UiLogSink.cs" />
     <Compile Include="Events\ICogImageDisplayEvent.cs" />
-    <Compile Include="Models\AcquisitionResultCode.cs" />
     <Compile Include="Models\CommunicationModel.cs" />
     <Compile Include="Models\ParametersConfig.cs" />
     <Compile Include="Models\ProtocolParse.cs" />

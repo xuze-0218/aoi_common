@@ -20,6 +20,7 @@ namespace aoi_common.Services
     {
         bool IsInitialized { get; }
         CogToolBlock toolBlock { get; }
+     
         Task InitialAsync(string path);
         void SetBlobFilter(string blobToolName, string measureType, double min, double max);
         void ChangeImagePath(string imagePath);
@@ -38,7 +39,7 @@ namespace aoi_common.Services
         private ICameraConfigService _cameraService;
         public CogToolBlock toolBlock { get; private set; }
 
-        public VisionService(IEventAggregator eventAggregator,ICameraConfigService cameraService, ILogger logger)
+        public VisionService(IEventAggregator eventAggregator, ICameraConfigService cameraService, ILogger logger)
         {
             _logger = logger;
             _eventAggregator = eventAggregator;
@@ -144,16 +145,15 @@ namespace aoi_common.Services
                 _logger.Warning("ToolBlock 未初始化");
                 return;
             }
-
             try
             {
-                _logger.Information("【在线模式】运行");
+                _logger.Debug("【在线模式】运行");
 
                 ICogImage currentImage = null;
                 if (_cameraService != null && _cameraService.IsReady())
                 {
                     _logger.Debug("【在线模式】从相机获取图像");
-                    currentImage = _cameraService.CompleteCapture();
+                    _cameraService.StartCapture();
 
                     if (currentImage == null)
                     {
