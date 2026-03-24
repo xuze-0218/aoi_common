@@ -13,6 +13,7 @@
     Height="800"
     prism:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
+
     <Grid Background="#1E1E1E">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -34,60 +35,91 @@
 
         <StackPanel
             Grid.Row="1"
+            Height="50"
             Margin="0"
             Background="#F0F0F0"
             Orientation="Horizontal">
-            <Button
-                Width="110"
-                Height="35"
-                Margin="0,0,5,0"
-                Background="#DC3545"
-                Command="{Binding OfflineSingleImageCommand}"
-                Content="⏸ 离线单张"
-                FontSize="12"
-                Foreground="White"
-                ToolTip="选择单张图像进行离线测试" />
 
             <Button
                 Width="110"
-                Height="35"
-                Margin="0,0,5,0"
-                Background="#DC3545"
+                Height="40"
+                Margin="0,0,8,0"
+                Background="#28A745"
+                Command="{Binding OfflineSingleImageCommand}"
+                Content="⏸ 离线单张"
+                FontSize="12"
+                FontWeight="Bold"
+                Foreground="Black"
+                ToolTip="选择单张本地图像进行离线测试" />
+
+            <Button
+                Width="110"
+                Height="40"
+                Margin="0,0,8,0"
+                Background="#28A745"
                 Command="{Binding OfflineFolderBatchCommand}"
                 Content="⏸ 离线文件夹"
                 FontSize="12"
-                Foreground="White"
+                FontWeight="Bold"
+                Foreground="Black"
                 ToolTip="选择文件夹进行批量离线测试" />
 
             <Button
                 Width="110"
-                Height="35"
-                Margin="0,0,5,0"
+                Height="40"
+                Margin="0,0,8,0"
                 Background="#28A745"
-                Command="{Binding OnlineStartCommand}"
-                Content="▶ 在线测试"
+                Command="{Binding OnlineStartCommand, UpdateSourceTrigger=PropertyChanged}"
+                Content="▶ 启动"
                 FontSize="12"
-                Foreground="White"
+                FontWeight="Bold"
+                Foreground="Black"
                 ToolTip="启动在线模式，等待 PLC 信号" />
 
             <Button
                 Width="110"
-                Height="35"
-                Margin="0,0,5,0"
-                Background="#6C757D"
-                Command="{Binding OnlineStopCommand}"
-                Content="⏹ 停止"
+                Height="40"
+                Margin="0,0,8,0"
+                Background="#FFC107"
+                Command="{Binding SnapCommand}"
+                Content="📷拍照测试"
                 FontSize="12"
+                FontWeight="Bold"
                 Foreground="Black"
                 IsEnabled="{Binding IsOnlineRunning}"
+                ToolTip="在线模式下手动触发一次拍照检测">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#999999" />
+                                <Setter Property="Foreground" Value="#CCCCCC" />
+                                <Setter Property="Opacity" Value="0.6" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Button
+                Width="110"
+                Height="40"
+                Margin="0,0,20,0"
+                Background="#DC3545"
+                Command="{Binding OnlineStopCommand, UpdateSourceTrigger=PropertyChanged}"
+                Content="⏹ 停止"
+                FontSize="12"
+                FontWeight="Bold"
+                Foreground="Black"
+                IsEnabled="{Binding IsOnlineRunning, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                 ToolTip="停止在线模式" />
 
             <TextBlock
-                Margin="20,0,0,0"
                 VerticalAlignment="Center"
-                FontSize="12"
+                FontSize="13"
+                FontWeight="Bold"
                 Foreground="#333"
-                Text="{Binding IsOnlineMode, StringFormat='当前模式：{0}'}" />
+                Text="{Binding ModeIndicator}" />
         </StackPanel>
 
         <Grid Grid.Row="2">

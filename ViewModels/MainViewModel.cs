@@ -27,11 +27,11 @@ namespace aoi_common.ViewModels
         /// <summary>
         /// 当前运行模式
         /// </summary>
-        private bool _isOnlineMode;
-        public bool IsOnlineMode
+        private string _modeIndicator = "离线模式";
+        public string ModeIndicator
         {
-            get => _isOnlineMode;
-            set => SetProperty(ref _isOnlineMode, value);
+            get => _modeIndicator;
+            set => SetProperty(ref _modeIndicator, value);
         }
 
         /// <summary>
@@ -55,6 +55,7 @@ namespace aoi_common.ViewModels
         public DelegateCommand OfflineFolderBatchCommand { get; private set; }      // 离线文件夹
         public DelegateCommand OnlineStartCommand { get; private set; }             // 在线测试
         public DelegateCommand OnlineStopCommand { get; private set; }              // 在线停止
+        public DelegateCommand SnapCommand { get; private set; }                    // 拍照测试
 
 
         public MainViewModel(IVisionService visionService, IDialogService dialogService, ICameraConfigService cameraService, ILogger logger)
@@ -98,6 +99,8 @@ namespace aoi_common.ViewModels
                     try
                     {
                         _logger.Debug("开始单张图像测试: {FilePath}", ofd.FileName);
+                        ModeIndicator = "离线模式 - 单张";
+                        IsOnlineRunning = false;
                         LocalFileImageSource imageSource = new LocalFileImageSource(ofd.FileName, _logger);
                         _visionService.RunToolWithImageSource(imageSource);
                         imageSource.Dispose();
@@ -121,8 +124,9 @@ namespace aoi_common.ViewModels
                 {
                     try
                     {
+                        ModeIndicator = "离线模式 - 批量";
+                        IsOnlineRunning = false;
                         _logger.Information("【离线模式】开始批量测试: {FolderPath}", dialog.SelectedPath);
-                        IsOnlineMode = false;
                         LocalFolderImageSource imageSource = new LocalFolderImageSource(dialog.SelectedPath, _logger);
                         if (imageSource.TotalCount == 0)
                         {
@@ -148,34 +152,57 @@ namespace aoi_common.ViewModels
                 try
                 {
                     _logger.Information("【在线模式】启动");
-                    IsOnlineMode = true;
                     IsOnlineRunning = true;
-                    _visionService.RunToolOnline();
+                    ModeIndicator = "在线模式 - 等待 PLC 信号或手动拍照";
+                    //_visionService.RunToolOnline();
                     _logger.Information("【在线模式】已启动，等待 PLC 信号或进行测试拍照");
                 }
                 catch (Exception ex)
                 {
                     _logger.Error(ex, "【在线模式】启动失败");
                     IsOnlineRunning = false;
+                    ModeIndicator = "离线模式";
                 }
-            }, () => !IsOnlineRunning);
+            }, 
+            () =>_visionService.IsInitialized && !IsOnlineRunning);
 
             OnlineStopCommand = new DelegateCommand(() =>
             {
                 try
                 {
                     _logger.Information("【在线模式】停止");
-                    IsOnlineMode = false;
                     IsOnlineRunning = false;
-
-                    _logger.Information("【在线模式】已停止");
+                    ModeIndicator = "离线模式";
+                    _logger.Information("【停止】已退出在线模式");
                 }
                 catch (Exception ex)
                 {
                     _logger.Error(ex, "【在线模式】停止失败");
                 }
             }, () => IsOnlineRunning);
-         
+
+            SnapCommand = new DelegateCommand(() =>
+            {
+                try
+                {
+                    _logger.Debug("【快速拍照】手动触发");
+
+                    if (!_cameraService.IsReady())
+                    {
+                        _logger.Error("相机未就绪");
+                        return;
+                    }
+                    _visionService.RunToolOnline();
+
+                    _logger.Information("拍照测试完成");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "拍照测试失败");
+                }
+            },
+       () => IsOnlineRunning && _cameraService.IsReady());
+
         }
 
         private async void MonitorStatus()
@@ -185,6 +212,9 @@ namespace aoi_common.ViewModels
                 await Task.Delay(500);
             }
             OpenDebugCommand.RaiseCanExecuteChanged();
+            OnlineStartCommand.RaiseCanExecuteChanged();
+            OnlineStopCommand.RaiseCanExecuteChanged();
+            SnapCommand.RaiseCanExecuteChanged();
             //ParaDebugCommand.RaiseCanExecuteChanged();
             Log.Information("Vpp初始化完成，可打开调试窗口查看");
         }
