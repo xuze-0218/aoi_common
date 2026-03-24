@@ -27,7 +27,7 @@ namespace aoi_common
             //通讯服务
             containerRegistry.RegisterSingleton<ICommunicationService, CommunicationService>();
             //报文解析
-            containerRegistry.RegisterSingleton<IDetectionLogicService, DetectionLogicService>();
+            containerRegistry.RegisterSingleton<IMessageParsingService, MessageParsingService>();
             //参数配置
             containerRegistry.RegisterSingleton<IParametersConfigService, ParametersConfigService>();
             // 注册Vision服务
@@ -42,6 +42,8 @@ namespace aoi_common
             containerRegistry.RegisterDialog<ParamConfigView, ParamConfigViewModel>();
             //通讯配置逻辑
             containerRegistry.RegisterDialog<CommunicationView, CommunicationViewModel>();
+            //注册检测会话服务(检测逻辑)
+            containerRegistry.RegisterSingleton<IDetectionSessionService, DetectionSessionService>();
 
             Log.Logger = new LoggerConfiguration().MinimumLevel.Information().Enrich.FromLogContext()
                 .WriteTo.Async(a => a.File("Logs/log_.txt",

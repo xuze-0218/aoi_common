@@ -7,8 +7,6 @@ using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Cognex.VisionPro.PMAlign;
 using Serilog;
@@ -123,7 +121,7 @@ namespace aoi_common.Services
 
         private void toolBlock_Ran(object sender, EventArgs e)
         {
-            var outputs = toolBlock.Outputs;
+            PublishToolBlockCompletedEvent();
             UpdateDisplayRecord();
         }
 
@@ -284,6 +282,60 @@ namespace aoi_common.Services
                 _logger.Error(ex, "运行程序失败");
                 throw;
             }
+        }
+
+        private void PublishToolBlockCompletedEvent()
+        {
+            try
+            {
+                if (toolBlock == null)
+                {
+                    _logger.Error("ToolBlock为空，无法发布完成事件");
+                    return;
+                }
+
+                var result = new Models.ToolBlockResultModel
+                {
+                    IsSuccess = true,
+                    ToolBlock = toolBlock,
+                    Outputs = ExtractToolBlockOutputs(),
+                    TimeConsuming = DateTime.Now,
+                    DisplayRecord = toolBlock.CreateLastRunRecord(),
+                    ErrorMessage = null
+                };
+
+                _eventAggregator.GetEvent<ToolBlockCompletedEvent>()
+                    .Publish(result);
+
+                _logger.Information("✓ 已发布ToolBlockCompletedEvent");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "✗ 发布ToolBlock完成事件失败");
+            }
+        }
+
+        private Dictionary<string, object> ExtractToolBlockOutputs()
+        {
+            var outputs = new Dictionary<string, object>();
+            try
+            {
+                if (toolBlock?.Outputs == null) return outputs;
+
+                foreach (var key in toolBlock.Outputs)
+                {
+                    try
+                    {
+                        outputs[key] = toolBlock.Outputs[key]?.Value;
+                    }
+                    catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "提取ToolBlock输出异常");
+            }
+            return outputs;
         }
 
         public void SetBlobFilter(string blobToolName, string measureType, double min, double max)

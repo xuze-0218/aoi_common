@@ -13,21 +13,23 @@ namespace aoi_common.Services
 
     public class ApplicationStartupService : IApplicationStartupService
     {
-        private readonly IDetectionLogicService _detectionLogicService;
+        private readonly IDetectionSessionService _detectionSessionService;
+        private readonly IMessageParsingService _detectionLogicService;
         private readonly ICommunicationService _communicationService;
         private readonly ICameraConfigService _cameraConfigService;
         private readonly IVisionService _visionService;
         private readonly ILogger _logger;
 
         public ApplicationStartupService(ICameraConfigService cameraConfigService, IVisionService visionService,
-            ICommunicationService communicationService, IParametersConfigService configService,
-            ILogger logger, IDetectionLogicService detectionLogicService)
+            ICommunicationService communicationService, IParametersConfigService configService, ILogger logger,
+            IMessageParsingService detectionLogicService, IDetectionSessionService detectionSessionService)
         {
             _cameraConfigService = cameraConfigService;
             _visionService = visionService;
             _logger = logger;
             _detectionLogicService = detectionLogicService;
             _communicationService = communicationService;
+            _detectionSessionService = detectionSessionService;
         }
 
         public async Task InitializeAsync()
@@ -40,7 +42,7 @@ namespace aoi_common.Services
                 await InitializeCommunicationAsync();
                 //加载相机配置  //加载vpp文件
                 await Task.WhenAll(InitializeCameraAsync(), InitializeVisionServiceAsync());
-               
+
                 _logger.Information("应用初始化完成");
             }
             catch (Exception ex)
@@ -57,12 +59,15 @@ namespace aoi_common.Services
             try
             {
                 _communicationService.Start();
-                _communicationService.MessageReceived += (sender, message) =>
+                _communicationService.MessageReceived +=async (sender, message) =>
                 {
                     _logger.Debug("接收来自 {Sender} 的消息: {Message}", sender, message);
                     try
                     {
-                        _detectionLogicService.ProcessPlcData(message);
+                        var result = await _detectionSessionService.StartDetectionSessionAsync(message);
+                        _logger.Information("检测会话完成: Success={Success}, Message={Message}",
+                            result.IsSuccess, result.Message);
+                        //_detectionLogicService.ParsePlcData(message);
                     }
                     catch (Exception ex)
                     {

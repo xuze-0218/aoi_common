@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace aoi_common.Models
 {
-    public class DetectionResult
+    public class DetectionResultModel
     {
         public int ItemCode { get; set; }
         public int Exposure { get; set; }
@@ -15,5 +15,7 @@ namespace aoi_common.Models
         public string PictureName { get; set; } = string.Empty; // 对应 outPictureName
         public string DetailedCode { get; set; } = string.Empty;// 对应 outCodeShow
         public bool IsSuccess { get; set; }
+        public string SendPlcMessage { get; set; } = string.Empty;
+        public Dictionary<string, object> ToolBlockOutputs { get; set; } = new Dictionary<string, object>();
     }
 }
