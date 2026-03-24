@@ -6,11 +6,6 @@ using Prism.DryIoc;
 using Prism.Ioc;
 using Serilog;
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace aoi_common
@@ -72,10 +67,7 @@ namespace aoi_common
                 Log.Fatal(ex, "应用启动失败");
                 MessageBox.Show("应用初始化失败: " + ex.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
-            }
-
-            //var visionservice = Container.Resolve<IVisionService>();
-            //await Task.Run(async () => await visionservice.InitialAsync("C:\\Users\\xuze\\Desktop\\testvpp.vpp"));
+            }          
         }
 
         protected override void OnExit(ExitEventArgs e)

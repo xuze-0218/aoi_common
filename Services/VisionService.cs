@@ -24,6 +24,9 @@ namespace aoi_common.Services
         Task InitialAsync(string path);
         void SetBlobFilter(string blobToolName, string measureType, double min, double max);
         void ChangeImagePath(string imagePath);
+        /// <summary>
+        /// 相机触发采集图片后默认触发回调处理函数
+        /// </summary>
         void AcquireImage();
         void RunToolWithImageSource(IImageSource imageSource);
         void RunToolWithImage(ICogImage image);
@@ -73,7 +76,6 @@ namespace aoi_common.Services
 
                 SetToolBlockInputImage(image);
                 toolBlock.Run();
-
                 _logger.Information("图像检测完成");
             }
             catch (Exception ex)
@@ -121,6 +123,7 @@ namespace aoi_common.Services
 
         private void toolBlock_Ran(object sender, EventArgs e)
         {
+            var outputs = toolBlock.Outputs;
             UpdateDisplayRecord();
         }
 
