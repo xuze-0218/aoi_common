@@ -19,7 +19,6 @@ namespace aoi_common.ViewModels
 {
     public class ParamConfigViewModel : BindableBase, IDialogAware
     {
-        private readonly string _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config/ConfigParas.json");
         
         private string _lastModuleName = "未分类模块";
         private ICollectionView _parametersView;

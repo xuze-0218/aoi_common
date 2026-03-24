@@ -96,12 +96,12 @@ namespace aoi_common.Services
 
         public void Start() 
         {
-            _logger.Information("正在从配置服务加载参数并启动通讯...");          
+            _logger.Debug("正在从配置服务加载参数并启动通讯...");          
             var protocol = GetConfigEnum<CommProtocol>("Protocol", CommProtocol.TCP);
             var role = GetConfigEnum<CommRole>("Role", CommRole.Server);
             var ip = _configService.GetString("Communication", "IP", "127.0.0.1");
             var port = _configService.GetInt("Communication", "Port", 5000);
-            _logger.Information("加载配置成功: {Protocol} {Role} {IP}:{Port}", protocol, role, ip, port);           
+            _logger.Debug("加载配置成功: {Protocol} {Role} {IP}:{Port}", protocol, role, ip, port);           
             Start(protocol, role, ip, port);
         }
 
