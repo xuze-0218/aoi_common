@@ -1,4 +1,5 @@
-﻿using Cognex.VisionPro;
+﻿using aoi_common.Models;
+using Cognex.VisionPro;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,11 @@ namespace aoi_common.Services
         /// 获取当前的实例
         /// </summary>
         CogAcqFifoTool CurrentCogAcqFifoTool { get; }
+
+        /// <summary>
+        /// 获取当前的 ICogAcqFifo 接口（用于直接图像采集）
+        /// </summary>
+        ICogAcqFifo CurrentCogAcqFifo { get; }
         /// <summary>
         /// 获取或创建CogAcqFifoTool实例
         /// </summary>
@@ -25,7 +31,14 @@ namespace aoi_common.Services
         Task<bool> LoadConfigAsync(string configPath);
         Task<bool> SaveConfigAsync(string configPath);
         string GetDefaultConfigPath();
-        bool IsInitialized { get; }
+        bool IsReady();
+
+        /// <summary>
+        /// 启动采集  非阻塞
+        /// PLC触发或用户点击
+        /// </summary>
+        void StartCapture();      
+
     }
 
     public class CameraConfigService : ICameraConfigService
@@ -36,14 +49,25 @@ namespace aoi_common.Services
         private const string DEFAULT_CONFIG_FILENAME = "CameraConfig.vpp";
 
         public CogAcqFifoTool CurrentCogAcqFifoTool => _cogAcqFifoTool;
+        public ICogAcqFifo CurrentCogAcqFifo => _cogAcqFifoTool?.Operator as ICogAcqFifo;
 
-        public bool IsInitialized => _cogAcqFifoTool != null;
-        
         public CameraConfigService(ILogger logger)
         {
             _logger = logger;
-            _configFolder= Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources");
+            _configFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources");
             EnsureConfigFolderExists();
+        }
+
+        private void CurrentCogAcqFifo_Complete(object sender, CogCompleteEventArgs e)
+        {
+            int numPending, numReady;
+            bool isBusy;
+            CurrentCogAcqFifo.GetFifoState(out numPending, out numReady, out isBusy);
+            if (numReady > 0)
+            {
+                CogAcqInfo info = new CogAcqInfo();
+                ICogImage image = CurrentCogAcqFifo.CompleteAcquireEx(info);
+            }
         }
 
         private void EnsureConfigFolderExists()
@@ -55,6 +79,16 @@ namespace aoi_common.Services
             }
         }
 
+        private void BindAcqFifoEvent()
+        {
+            var fifo = CurrentCogAcqFifo;
+            if (fifo != null)
+            {
+                fifo.Complete -= CurrentCogAcqFifo_Complete; 
+                fifo.Complete += CurrentCogAcqFifo_Complete;
+            }
+        }
+
         public CogAcqFifoTool GetOrCreateAcqFifoTool()
         {
             if (_cogAcqFifoTool != null)
@@ -63,6 +97,7 @@ namespace aoi_common.Services
             try
             {
                 _cogAcqFifoTool = new CogAcqFifoTool();
+                BindAcqFifoEvent();
                 _logger.Debug("创建新的CogAcqFifoTool实例");
                 return _cogAcqFifoTool;
             }
@@ -89,6 +124,7 @@ namespace aoi_common.Services
                 try
                 {
                     _cogAcqFifoTool = (CogAcqFifoTool)CogSerializer.LoadObjectFromFile(configPath);
+                    BindAcqFifoEvent();
                     _logger.Information("成功加载相机配置: {ConfigPath}", configPath);
                     return true;
                 }
@@ -131,9 +167,54 @@ namespace aoi_common.Services
             });
         }
 
+        public bool IsReady()
+        {
+            if (_cogAcqFifoTool == null || _cogAcqFifoTool.Operator == null)
+                return false;
+
+            try
+            {
+                return _cogAcqFifoTool.Operator != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
         public string GetDefaultConfigPath()
         {
             return Path.Combine(_configFolder, DEFAULT_CONFIG_FILENAME);
         }
+
+        ///启动采集  非阻塞、立即返回
+        public void StartCapture()
+        {
+            if (!IsReady())
+            {
+                _logger.Error("【相机采集】启动失败：相机未准备就绪");
+                return;
+            }
+
+            try
+            {
+                ICogAcqFifo cogAcqFifo = CurrentCogAcqFifo;
+                if (cogAcqFifo == null)
+                {
+                    _logger.Error("【相机采集】启动失败：无法获取 ICogAcqFifo");
+                    return;
+                }
+
+                _logger.Information("【相机采集】已启动（非阻塞）");
+                cogAcqFifo.StartAcquire();
+                _logger.Debug("【相机采集】相机后台正在拍照...");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "【相机采集】启动异常");
+            }
+        }
+
     }
 }

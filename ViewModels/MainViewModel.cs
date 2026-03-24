@@ -33,9 +33,9 @@ namespace aoi_common.ViewModels
         public ICommand RunFolderBatchCommand { get; private set; }
         public DelegateCommand RunCommand { get; private set; }
 
-        public MainViewModel(IVisionService visionService, IDialogService dialogService,ICameraConfigService cameraService, ILogger logger)
+        public MainViewModel(IVisionService visionService, IDialogService dialogService, ICameraConfigService cameraService, ILogger logger)
         {
-            
+
             _cameraService = cameraService;
             _visionService = visionService;
             _dialogService = dialogService;
@@ -53,8 +53,8 @@ namespace aoi_common.ViewModels
                 () => _visionService.IsInitialized);
 
             CameraDebugCommand = new DelegateCommand(
-                () => { _dialogService.Show("CameraDebugView", new DialogParameters(), r => { }); },
-                () => _cameraService.IsInitialized);
+                () => { _dialogService.Show("CameraDebugView", new DialogParameters(), r => { }); }
+                /*, () => _cameraService.IsInitialized*/);
 
             ParaDebugCommand = new DelegateCommand(
                 () => { _dialogService.Show("ParamConfigView", new DialogParameters(), r => { }); });

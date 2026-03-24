@@ -35,12 +35,16 @@ namespace aoi_common.Services
         private readonly ILogger _logger;
         private CogImageFileTool _imageFileTool;
         private IEventAggregator _eventAggregator;
+        private ICameraConfigService _cameraService;
         public CogToolBlock toolBlock { get; private set; }
 
-        public VisionService(IEventAggregator eventAggregator, ILogger logger)
+        public VisionService(IEventAggregator eventAggregator,ICameraConfigService cameraService, ILogger logger)
         {
             _logger = logger;
             _eventAggregator = eventAggregator;
+            _cameraService = cameraService;
+            //_acqFifo = cameraService.CurrentCogAcqFifoTool.Operator;
+            //ICogAcqExposure exposure = _acqFifo.OwnedExposureParams;
             _imageFileTool = new CogImageFileTool();
         }
 
@@ -137,27 +141,88 @@ namespace aoi_common.Services
         {
             if (toolBlock == null)
             {
-                _logger.Warning("ToolBlock未初始化，无法运行");
+                _logger.Warning("ToolBlock 未初始化");
                 return;
             }
+
             try
             {
-                _imageFileTool.Run();
-                ICogImage currentImage = _imageFileTool.OutputImage;
+                _logger.Information("【在线模式】运行");
 
-                if (toolBlock.Inputs.Contains("Image"))
-                    toolBlock.Inputs["Image"].Value = currentImage;
+                ICogImage currentImage = null;
+                if (_cameraService != null && _cameraService.IsReady())
+                {
+                    _logger.Debug("【在线模式】从相机获取图像");
+                    currentImage = _cameraService.CompleteCapture();
+
+                    if (currentImage == null)
+                    {
+                        _logger.Warning("【在线模式】相机采集失败，尝试使用备用方案");
+                        currentImage = TryGetFallbackImage();
+                    }
+                }
+                else
+                {
+                    _logger.Warning("【在线模式】相机未就绪，使用备用方案");
+                    currentImage = TryGetFallbackImage();
+                }
+
+                if (currentImage == null)
+                {
+                    _logger.Error("【在线模式】无法获取输入图像，运行失败");
+                    return;
+                }
+
+                SetToolBlockInputImage(currentImage);
                 toolBlock.Run();
+
+                _logger.Information("【在线模式】完成");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "运行ToolBlock失败");
+                _logger.Error(ex, "【在线模式】异常");
             }
             //int num = toolBlock.Tools["CogBlobTool1"].DataBindings.Count;
             //CogBlobTool tool = toolBlock.Tools["CogBlobTool1"] as CogBlobTool ;
             //var items = tool.RunParams.RunTimeMeasures;
             //var db = toolBlock.Tools["CogBlobTool1"].DataBindings[1].DestinationPath; //"RunParams.RunTimeMeasures.Item[0].FilterRangeHigh"
             //var vvv = toolBlock.Tools.Contains(db);
+        }
+
+        private ICogImage TryGetFallbackImage()
+        {
+            try
+            {
+                _logger.Debug("【备用方案】使用文件工具");
+                _imageFileTool.Run();
+                ICogImage image = _imageFileTool.OutputImage;
+
+                if (image != null)
+                {
+                    _logger.Information("【备用方案】成功");
+                    return image;
+                }
+
+                _logger.Error("【备用方案】失败");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "【备用方案】异常");
+                return null;
+            }
+        }
+
+        private void SetToolBlockInputImage(ICogImage image)
+        {
+            if (toolBlock.Inputs.Contains("Image"))
+            {
+                toolBlock.Inputs["Image"].Value = image;
+            }
+            else if (toolBlock.Inputs.Contains("IntputImage"))
+            {
+                toolBlock.Inputs["IntputImage"].Value = image;
+            }
         }
 
         public void RunToolWithImageSource(IImageSource imageSource)

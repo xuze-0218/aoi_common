@@ -77,7 +77,7 @@ namespace aoi_common.ViewModels
                 if (CurrentCogAcqFifoTool != null)
                 {
                   
-                    IsConfigLoaded = _cameraConfigService.IsInitialized;
+                    IsConfigLoaded = _cameraConfigService.IsReady();
                     StatusMessage = "相机已初始化";
                     _logger.Information("相机调试界面已初始化");
                 }
