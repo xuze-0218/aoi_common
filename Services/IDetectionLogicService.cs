@@ -12,10 +12,12 @@ namespace aoi_common.Services
 
     public class DetectionLogicService : IDetectionLogicService
     {
+        private readonly IVisionService _visionService;
         private readonly IParametersConfigService _config;
-        public DetectionLogicService(IParametersConfigService config)
+        public DetectionLogicService(IParametersConfigService config, IVisionService visionService)
         {
             _config = config;
+            _visionService = visionService;
         }
 
         public DetectionResult ProcessPlcData(string rawPlcData)
@@ -46,6 +48,7 @@ namespace aoi_common.Services
             else if (dc.CalibOrDetect == 2 && dc.FuncCode == 2003)
             {
                 ProcessDetection(result, logs, dc);
+                
             }
             else
             {
@@ -106,8 +109,9 @@ namespace aoi_common.Services
                     res.Exposure = _config.GetInt("相机参数", "胶条曝光");
                     res.Gain = _config.GetInt("相机参数", "胶条增益");
                     res.IsSuccess = true;
+                   
                     break;
-                case 9: res.ItemCode = 9; res.Message = "进入组合胶检测流程！"; res.IsSuccess = true; break;
+                case 9: res.ItemCode = 9; res.Message = "进入组合胶检测流程！"; res.IsSuccess = true; _visionService.AcquireImage();  break;
                 case 10: res.ItemCode = 10; res.Message = "进入备用胶2检测流程！"; res.IsSuccess = true; break;
                 default: res.ItemCode = 94; res.Message = $"PLC产品类型异常：{finalType}！"; break;
             }

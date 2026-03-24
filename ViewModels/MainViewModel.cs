@@ -202,7 +202,7 @@ namespace aoi_common.ViewModels
                         _logger.Error("相机未就绪");
                         return;
                     }
-                    _visionService.RunToolOnline();
+                    _visionService.AcquireImage();
 
                     _logger.Information("拍照测试完成");
                 }

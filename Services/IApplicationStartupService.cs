@@ -17,7 +17,6 @@ namespace aoi_common.Services
         private readonly ICommunicationService _communicationService;
         private readonly ICameraConfigService _cameraConfigService;
         private readonly IVisionService _visionService;
-        //private readonly IParametersConfigService _configService;
         private readonly ILogger _logger;
 
         public ApplicationStartupService(ICameraConfigService cameraConfigService, IVisionService visionService,
@@ -29,7 +28,6 @@ namespace aoi_common.Services
             _logger = logger;
             _detectionLogicService = detectionLogicService;
             _communicationService = communicationService;
-            //_configService = configService;
         }
 
         public async Task InitializeAsync()
@@ -40,7 +38,7 @@ namespace aoi_common.Services
             {
                 //加载通讯服务
                 await InitializeCommunicationAsync();
-                //加载相机配置  //视觉vpp文件
+                //加载相机配置  //加载vpp文件
                 await Task.WhenAll(InitializeCameraAsync(), InitializeVisionServiceAsync());
                
                 _logger.Information("应用初始化完成");

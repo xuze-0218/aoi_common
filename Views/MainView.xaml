@@ -30,7 +30,6 @@
                 <MenuItem Command="{Binding ParaDebugCommand}" Header="参数配置" />
                 <MenuItem Command="{Binding CommunicateDebugCommand}" Header="通讯配置" />
             </MenuItem>
-            <MenuItem Header="工具" />
         </Menu>
 
         <StackPanel

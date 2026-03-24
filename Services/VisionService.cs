@@ -24,7 +24,7 @@ namespace aoi_common.Services
         Task InitialAsync(string path);
         void SetBlobFilter(string blobToolName, string measureType, double min, double max);
         void ChangeImagePath(string imagePath);
-        void RunToolOnline();
+        void AcquireImage();
         void RunToolWithImageSource(IImageSource imageSource);
         void RunToolWithImage(ICogImage image);
     }
@@ -171,7 +171,7 @@ namespace aoi_common.Services
             }
         }
 
-        public void RunToolOnline()
+        public void AcquireImage()
         {
             if (toolBlock == null)
             {
