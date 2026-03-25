@@ -46,11 +46,11 @@ namespace aoi_common.Services
         public DetectionSessionState CurrentState => _currentState;
 
         public DetectionSessionService(
-            IVisionService visionService, 
-            IMessageParsingService messageParsingService, 
-            ICommunicationService communicationService, 
-            IParametersConfigService config, 
-            IEventAggregator eventAggregator, 
+            IVisionService visionService,
+            IMessageParsingService messageParsingService,
+            ICommunicationService communicationService,
+            IParametersConfigService config,
+            IEventAggregator eventAggregator,
             ILogger logger)
         {
             _visionService = visionService;
@@ -65,6 +65,10 @@ namespace aoi_common.Services
             _logger.Information("检测会话服务已初始化");
         }
 
+        /// <summary>
+        /// 接收toolblock运行完成返回的ToolBlockResultModel结果
+        /// </summary>
+        /// <param name="toolBlockResult"></param>
         private void OnToolBlockCompleted(ToolBlockResultModel toolBlockResult)
         {
             // 只处理有活跃会话的情况
@@ -90,15 +94,13 @@ namespace aoi_common.Services
                     _sessionCompletionSource?.TrySetResult(_currentSessionResult);
                     return;
                 }
-
                 //从ToolBlock提取检测数据
                 ExtractToolBlockResults(toolBlockResult);
-                _logger.Debug("已提取ToolBlock输出数据 (共{Count}项)",
-                    _currentSessionResult.ToolBlockOutputs.Count);
+                _logger.Debug("已提取ToolBlock输出数据 (共{Count}项)", _currentSessionResult.ToolBlockOutputs.Count);
 
                 //执行检测逻辑判定
                 bool detectionPassed = ExecuteDetectionLogic(toolBlockResult);
-                _logger.Information("✓ 检测逻辑执行完成 - Result={Result}",
+                _logger.Information("检测逻辑执行完成 - Result={Result}",
                     detectionPassed ? "合格" : "不合格");
 
                 // 更新检测结果
@@ -111,11 +113,11 @@ namespace aoi_common.Services
                 _currentSessionResult.SendPlcMessage = BuildPlcResponseMessage(
                     _currentSessionResult,
                     toolBlockResult);
-                _logger.Debug("✓ 已构建PLC回复报文");
+                _logger.Debug("已构建PLC回复报文");
 
                 //发送PLC结果
                 SendResultToPlc(_currentSessionResult);
-                _logger.Debug("✓ 已发送PLC结果");
+                _logger.Debug("已发送PLC结果");
 
                 _currentState = DetectionSessionState.Completed;
 
@@ -168,7 +170,6 @@ namespace aoi_common.Services
             }
         }
 
-
         private bool ExecuteDetectionLogic(ToolBlockResultModel toolBlockResult)
         {
             try
@@ -203,7 +204,6 @@ namespace aoi_common.Services
                 return false;
             }
         }
-
 
         public async Task<DetectionResultModel> StartDetectionSessionAsync(string plcData)
         {
@@ -290,7 +290,7 @@ namespace aoi_common.Services
                                 _logger.Error("检测会话超时");
                             }
                         }
-                        break;                    
+                        break;
                 }
                 _logger.Information("========== 检测会话结束 - Result={Result} ==========",
                     _currentSessionResult.IsSuccess ? "成功" : "失败");

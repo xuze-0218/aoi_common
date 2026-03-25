@@ -14,11 +14,14 @@ using Serilog;
 namespace aoi_common.Services
 {
 
+    /// <summary>
+    /// ToolBlock服务
+    /// </summary>
     public interface IVisionService
     {
         bool IsInitialized { get; }
         CogToolBlock toolBlock { get; }
-     
+
         Task InitialAsync(string path);
         void SetBlobFilter(string blobToolName, string measureType, double min, double max);
         void ChangeImagePath(string imagePath);
@@ -48,7 +51,7 @@ namespace aoi_common.Services
             //_acqFifo = cameraService.CurrentCogAcqFifoTool.Operator;
             //ICogAcqExposure exposure = _acqFifo.OwnedExposureParams;
             _imageFileTool = new CogImageFileTool();
-            if (_cameraService!=null)
+            if (_cameraService != null)
             {
                 _cameraService.OnImageCaptured += HandleImageCaptured;
             }
@@ -119,6 +122,11 @@ namespace aoi_common.Services
             });
         }
 
+        /// <summary>
+        /// toolblock运行结束
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void toolBlock_Ran(object sender, EventArgs e)
         {
             PublishToolBlockCompletedEvent();
@@ -303,15 +311,12 @@ namespace aoi_common.Services
                     DisplayRecord = toolBlock.CreateLastRunRecord(),
                     ErrorMessage = null
                 };
-
-                _eventAggregator.GetEvent<ToolBlockCompletedEvent>()
-                    .Publish(result);
-
-                _logger.Information("✓ 已发布ToolBlockCompletedEvent");
+                _eventAggregator.GetEvent<ToolBlockCompletedEvent>().Publish(result);
+                _logger.Debug("已发布ToolBlockCompletedEvent");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "✗ 发布ToolBlock完成事件失败");
+                _logger.Error(ex, "发布ToolBlock完成事件失败");
             }
         }
 
