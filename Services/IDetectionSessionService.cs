@@ -18,16 +18,32 @@ namespace aoi_common.Services
     public interface IDetectionSessionService
     {
         /// <summary>
-        /// 开启检测
+        /// 开启在线检测
         /// </summary>
         /// <returns></returns>
         Task<DetectionResultModel> StartDetectionSessionAsync(string plcData);
+        /// <summary>
+        /// 离线检测
+        /// </summary>
+        /// <returns></returns>
+        Task<DetectionResultModel> StartOfflineDetectionSessionAsync();
 
         /// <summary>
         /// 当前会话的状态
         /// </summary>
         DetectionSessionState CurrentState { get; }
     }
+
+    /// <summary>
+    /// 检测会话的类型
+    /// </summary>
+    public enum DetectionSessionType
+    {
+        Online,   // PLC在线模式
+        Offline   // 离线本地测试模式
+    }
+
+
 
     public class DetectionSessionService : IDetectionSessionService
     {
@@ -42,6 +58,7 @@ namespace aoi_common.Services
         private string _currentPlcData;
         private TaskCompletionSource<DetectionResultModel> _sessionCompletionSource;
         private ProtocolParse _currentProtocolParse;
+        private DetectionSessionType _currentSessionType = DetectionSessionType.Online; 
         private DetectionSessionState _currentState = DetectionSessionState.Idle;
         public DetectionSessionState CurrentState => _currentState;
 
@@ -71,10 +88,16 @@ namespace aoi_common.Services
         /// <param name="toolBlockResult"></param>
         private void OnToolBlockCompleted(ToolBlockResultModel toolBlockResult)
         {
-            //只处理有活跃会话的情况
-            if (_currentState != DetectionSessionState.WaitingForImage)
+
+            bool isValidOnlineSession = _currentState == DetectionSessionState.WaitingForImage &&
+                                      _currentSessionType == DetectionSessionType.Online;
+            bool isValidOfflineSession = _currentState == DetectionSessionState.WaitingForImageOffline &&
+                                        _currentSessionType == DetectionSessionType.Offline;
+
+            if (!isValidOnlineSession && !isValidOfflineSession)
             {
-                _logger.Debug(" ToolBlock完成但无活跃会话 (State={State})，忽略此结果", _currentState);
+                _logger.Debug("ToolBlock完成但无活跃会话 (State={State}, Type={Type})，忽略此结果",
+                    _currentState, _currentSessionType);
                 return;
             }
 
@@ -89,7 +112,10 @@ namespace aoi_common.Services
                     _currentSessionResult.IsSuccess = false;
                     _currentSessionResult.Message = $"ToolBlock运行失败: {toolBlockResult.ErrorMessage}";
                     _currentSessionResult.ItemCode = 99;
-                    SendResultToPlc(_currentSessionResult);
+                    if (_currentSessionType == DetectionSessionType.Online)
+                    {
+                        SendResultToPlc(_currentSessionResult);
+                    }
                     _currentState = DetectionSessionState.Failed;
                     _sessionCompletionSource?.TrySetResult(_currentSessionResult);
                     return;
@@ -116,9 +142,15 @@ namespace aoi_common.Services
                 _logger.Debug("已构建PLC回复报文");
 
                 //发送PLC结果
-                SendResultToPlc(_currentSessionResult);
-                _logger.Debug("已发送PLC结果");
-
+                if (_currentSessionType == DetectionSessionType.Online)
+                {
+                    SendResultToPlc(_currentSessionResult);
+                    _logger.Debug("已发送PLC结果");
+                }
+                else
+                {
+                    _logger.Debug("离线模式，跳过发送PLC结果");
+                }
                 _currentState = DetectionSessionState.Completed;
 
                 //信号会话完成
@@ -221,6 +253,7 @@ namespace aoi_common.Services
 
             try
             {
+                _currentSessionType = DetectionSessionType.Online;
                 _currentState = DetectionSessionState.WaitingForImage;
                 _currentPlcData = plcData;
                 _sessionCompletionSource = new TaskCompletionSource<DetectionResultModel>();
@@ -305,6 +338,79 @@ namespace aoi_common.Services
                 {
                     IsSuccess = false,
                     Message = $"检测异常: {ex.Message}",
+                    ItemCode = 99
+                };
+            }
+            finally
+            {
+                _currentState = DetectionSessionState.Idle;
+            }
+        }
+
+        public async Task<DetectionResultModel> StartOfflineDetectionSessionAsync()
+        {
+            if (_currentState != DetectionSessionState.Idle)
+            {
+                _logger.Warning("已有检测会话在进行中 (State={State})，拒绝离线检测请求", _currentState);
+                return new DetectionResultModel
+                {
+                    IsSuccess = false,
+                    Message = "设备忙，无法处理离线检测",
+                    ItemCode = 99
+                };
+            }
+
+            try
+            {
+                _currentSessionType = DetectionSessionType.Offline; 
+                _currentState = DetectionSessionState.WaitingForImageOffline;
+                _sessionCompletionSource = new TaskCompletionSource<DetectionResultModel>();
+
+                _logger.Information("========== 开始离线检测会话 ==========");
+
+               
+                _currentSessionResult = new DetectionResultModel
+                {
+                    ItemCode = 1,  // 默认为单个胶块检测
+                    Message = "离线测试",
+                    IsSuccess = false,
+                    Exposure = _config.GetInt("相机参数", "默认曝光"),
+                    Gain = _config.GetInt("相机参数", "默认增益"),
+                    ToolBlockOutputs = new Dictionary<string, object>()
+                };
+
+                _logger.Debug("离线会话初始化完成");
+
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                {
+                    try
+                    {
+                        await _sessionCompletionSource.Task;
+                        _logger.Information("离线检测会话已完成");
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _currentState = DetectionSessionState.Failed;
+                        _currentSessionResult.IsSuccess = false;
+                        _currentSessionResult.Message = "离线检测超时）";
+                        _currentSessionResult.ItemCode = 99;
+                        _logger.Error("离线检测会话超时");
+                    }
+                }
+
+                _logger.Information("========== 离线检测会话结束 - Result={Result} ==========",
+                    _currentSessionResult.IsSuccess ? "成功" : "失败");
+
+                return _currentSessionResult;
+            }
+            catch (Exception ex)
+            {
+                _currentState = DetectionSessionState.Failed;
+                _logger.Error(ex, "离线检测会话异常");
+                return new DetectionResultModel
+                {
+                    IsSuccess = false,
+                    Message = $"离线检测异常: {ex.Message}",
                     ItemCode = 99
                 };
             }

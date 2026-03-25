@@ -17,6 +17,10 @@ namespace aoi_common.Models
         /// </summary>
         WaitingForImage,
         /// <summary>
+        /// 离线测试
+        /// </summary>
+        WaitingForImageOffline,
+        /// <summary>
         /// 正在处理检测结果
         /// </summary>
         Processing,

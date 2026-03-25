@@ -19,6 +19,7 @@ namespace aoi_common.ViewModels
 {
     public class MainViewModel : BindableBase
     {
+        private readonly IDetectionSessionService _detectionSessionService;
         private readonly ICameraConfigService _cameraService;
         private readonly IVisionService _visionService;
         private readonly IDialogService _dialogService;
@@ -68,9 +69,14 @@ namespace aoi_common.ViewModels
         public DelegateCommand SnapCommand { get; private set; }                    // 拍照测试
 
 
-        public MainViewModel(IVisionService visionService, IDialogService dialogService, ICameraConfigService cameraService, ILogger logger)
+        public MainViewModel(
+            IDetectionSessionService detectionSessionService,
+            IVisionService visionService,
+            IDialogService dialogService,
+            ICameraConfigService cameraService,
+            ILogger logger)
         {
-
+            _detectionSessionService = detectionSessionService;
             _cameraService = cameraService;
             _visionService = visionService;
             _dialogService = dialogService;
@@ -97,7 +103,7 @@ namespace aoi_common.ViewModels
             CommunicateDebugCommand = new DelegateCommand(
                 () => { _dialogService.Show("CommunicationView", new DialogParameters(), r => { }); });
 
-            OfflineSingleImageCommand = new DelegateCommand(() =>
+            OfflineSingleImageCommand = new DelegateCommand(async () =>
             {
                 var ofd = new Microsoft.Win32.OpenFileDialog
                 {
@@ -111,10 +117,12 @@ namespace aoi_common.ViewModels
                         _logger.Information("开始单张图像测试: {FilePath}", ofd.FileName);
                         ModeIndicator = "离线模式 - 单张";
                         IsOnlineRunning = false;
+                        var detectionTask = _detectionSessionService.StartOfflineDetectionSessionAsync();
                         LocalFileImageSource imageSource = new LocalFileImageSource(ofd.FileName, _logger);
                         _visionService.RunToolWithImageSource(imageSource);
                         imageSource.Dispose();
-                        _logger.Debug("单张图像测试完成");
+                        var result = await detectionTask;
+                        _logger.Information("离线单张检测完成 - Result={Result}, Message={Message}", result.IsSuccess ? "成功" : "失败", result.Message);
                     }
                     catch (Exception ex)
                     {
@@ -123,7 +131,7 @@ namespace aoi_common.ViewModels
                 }
             });
 
-            OfflineFolderBatchCommand = new DelegateCommand(() =>
+            OfflineFolderBatchCommand = new DelegateCommand(async () =>
             {
                 var dialog = new System.Windows.Forms.FolderBrowserDialog
                 {
@@ -137,6 +145,7 @@ namespace aoi_common.ViewModels
                         ModeIndicator = "离线模式 - 批量";
                         IsOnlineRunning = false;
                         _logger.Information("开始批量测试: {FolderPath}", dialog.SelectedPath);
+                        var detectionTask = _detectionSessionService.StartOfflineDetectionSessionAsync();
                         LocalFolderImageSource imageSource = new LocalFolderImageSource(dialog.SelectedPath, _logger);
                         if (imageSource.TotalCount == 0)
                         {
@@ -147,8 +156,9 @@ namespace aoi_common.ViewModels
                         _logger.Debug("共找到{Count}张图像,开始处理...", imageSource.TotalCount);
                         _visionService.RunToolWithImageSource(imageSource);
                         imageSource.Dispose();
-
-                        _logger.Debug("批量测试完成");
+                        var result = await detectionTask;
+                        _logger.Information("离线批量检测完成 - Result={Result}, Message={Message}",
+                            result.IsSuccess ? "成功" : "失败", result.Message);                      
                     }
                     catch (Exception ex)
                     {
