@@ -19,13 +19,14 @@ namespace aoi_common.ViewModels
 {
     public class ParamConfigViewModel : BindableBase, IDialogAware
     {
-        
+
         private string _lastModuleName = "未分类模块";
         private ICollectionView _parametersView;
         private IParametersConfigService _configService;
+        private bool _isInitialized = false;
         public ObservableCollection<ParametersConfig> Parameters => _configService.ConfigParams;
 
-       
+
         public ICollectionView ParametersView
         {
             get => _parametersView;
@@ -55,13 +56,7 @@ namespace aoi_common.ViewModels
         public ParamConfigViewModel(IParametersConfigService configService)
         {
             _configService = configService;
-            //LoadConfig();
-
-            ParametersView = CollectionViewSource.GetDefaultView(Parameters);
-            ParametersView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ParametersConfig.ModuleName)));
-            ParametersView.SortDescriptions.Add(new SortDescription(nameof(ParametersConfig.ModuleName), ListSortDirection.Ascending));
-            ParametersView.SortDescriptions.Add(new SortDescription(nameof(ParametersConfig.Name), ListSortDirection.Ascending));
-
+        
             AddCommand = new DelegateCommand(() =>
             {
                 if (SelectedParameter != null)
@@ -81,7 +76,7 @@ namespace aoi_common.ViewModels
             });
 
             DeleteCommand = new DelegateCommand<ParametersConfig>(p => Parameters.Remove(p));
-            SaveCommand = new DelegateCommand(()=>_configService.SaveConfig(Parameters));
+            SaveCommand = new DelegateCommand(() => _configService.SaveConfig(Parameters));
         }
         private void OnParameterPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -93,8 +88,22 @@ namespace aoi_common.ViewModels
 
         public bool CanCloseDialog() => true;
 
-        public void OnDialogClosed() { }
+        public void OnDialogClosed() { _isInitialized = false; }
 
-        public void OnDialogOpened(IDialogParameters parameters) { }
+        public void OnDialogOpened(IDialogParameters parameters) 
+        {
+            if (_isInitialized) return;
+            _isInitialized = true;
+
+            if (ParametersView != null)
+            {
+                ParametersView.GroupDescriptions.Clear();
+                ParametersView.SortDescriptions.Clear();
+            }
+            ParametersView = CollectionViewSource.GetDefaultView(Parameters);
+            ParametersView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ParametersConfig.ModuleName)));
+            ParametersView.SortDescriptions.Add(new SortDescription(nameof(ParametersConfig.ModuleName), ListSortDirection.Ascending));
+            ParametersView.SortDescriptions.Add(new SortDescription(nameof(ParametersConfig.Name), ListSortDirection.Ascending));
+        }
     }
 }

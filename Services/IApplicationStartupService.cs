@@ -41,15 +41,27 @@ namespace aoi_common.Services
                 //加载通讯服务
                 await InitializeCommunicationAsync();
                 //加载相机配置  //加载vpp文件
-                await Task.WhenAll(InitializeCameraAsync(), InitializeVisionServiceAsync());
 
-                _logger.Information("应用初始化完成");
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.WhenAll(InitializeCameraAsync(), InitializeVisionServiceAsync());
+                        _logger.Information("后台初始化完成");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Fatal(ex, "后台初始化失败");
+                    }
+                });
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
                 _logger.Fatal(ex, "应用初始化失败");
                 throw;
             }
+
         }
 
         private async Task InitializeCommunicationAsync()
@@ -59,7 +71,7 @@ namespace aoi_common.Services
             try
             {
                 _communicationService.Start();
-                _communicationService.MessageReceived +=async (sender, message) =>
+                _communicationService.MessageReceived += async (sender, message) =>
                 {
                     _logger.Debug("接收来自 {Sender} 的消息: {Message}", sender, message);
                     try
@@ -107,7 +119,6 @@ namespace aoi_common.Services
             catch (Exception ex)
             {
                 _logger.Error(ex, "初始化相机配置失败");
-                throw;
             }
         }
 
@@ -137,7 +148,6 @@ namespace aoi_common.Services
             catch (Exception ex)
             {
                 _logger.Error(ex, "初始化VisionService失败");
-                throw;
             }
         }
 
@@ -152,6 +162,7 @@ namespace aoi_common.Services
                     return;
                 await _cameraConfigService.SaveConfigAsync(defaultConfigPath);
                 _logger.Information("相机配置已保存");
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
