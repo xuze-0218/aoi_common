@@ -56,7 +56,7 @@ namespace aoi_common.ViewModels
         public ParamConfigViewModel(IParametersConfigService configService)
         {
             _configService = configService;
-        
+
             AddCommand = new DelegateCommand(() =>
             {
                 if (SelectedParameter != null)
@@ -90,7 +90,7 @@ namespace aoi_common.ViewModels
 
         public void OnDialogClosed() { _isInitialized = false; }
 
-        public void OnDialogOpened(IDialogParameters parameters) 
+        public void OnDialogOpened(IDialogParameters parameters)
         {
             if (_isInitialized) return;
             _isInitialized = true;
@@ -99,8 +99,13 @@ namespace aoi_common.ViewModels
             {
                 ParametersView.GroupDescriptions.Clear();
                 ParametersView.SortDescriptions.Clear();
+                if (ParametersView is ListCollectionView lcv)
+                {
+                    lcv.Refresh();
+                }
             }
-            ParametersView = CollectionViewSource.GetDefaultView(Parameters);
+            //ParametersView = CollectionViewSource.GetDefaultView(Parameters);
+            ParametersView = new ListCollectionView(Parameters);
             ParametersView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ParametersConfig.ModuleName)));
             ParametersView.SortDescriptions.Add(new SortDescription(nameof(ParametersConfig.ModuleName), ListSortDirection.Ascending));
             ParametersView.SortDescriptions.Add(new SortDescription(nameof(ParametersConfig.Name), ListSortDirection.Ascending));
