@@ -323,23 +323,23 @@ namespace aoi_common.Services
         private Dictionary<string, object> ExtractToolBlockOutputs()
         {
             var outputs = new Dictionary<string, object>();
-            try
-            {
-                if (toolBlock?.Outputs == null) return outputs;
+            //try
+            //{
+            //    if (toolBlock?.Outputs == null) return outputs;
 
-                foreach (var key in toolBlock.Outputs)
-                {
-                    try
-                    {
-                        outputs[key] = toolBlock.Outputs[key]?.Value;
-                    }
-                    catch { }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Warning(ex, "提取ToolBlock输出异常");
-            }
+            //    foreach (var key in toolBlock.Outputs)
+            //    {
+            //        try
+            //        {
+            //            outputs[key] = toolBlock.Outputs[key]?.Value;
+            //        }
+            //        catch { }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.Warning(ex, "提取ToolBlock输出异常");
+            //}
             return outputs;
         }
 

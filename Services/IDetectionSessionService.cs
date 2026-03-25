@@ -71,7 +71,7 @@ namespace aoi_common.Services
         /// <param name="toolBlockResult"></param>
         private void OnToolBlockCompleted(ToolBlockResultModel toolBlockResult)
         {
-            // 只处理有活跃会话的情况
+            //只处理有活跃会话的情况
             if (_currentState != DetectionSessionState.WaitingForImage)
             {
                 _logger.Debug(" ToolBlock完成但无活跃会话 (State={State})，忽略此结果", _currentState);
@@ -98,7 +98,7 @@ namespace aoi_common.Services
                 ExtractToolBlockResults(toolBlockResult);
                 _logger.Debug("已提取ToolBlock输出数据 (共{Count}项)", _currentSessionResult.ToolBlockOutputs.Count);
 
-                //执行检测逻辑判定
+                //执行检测逻辑
                 bool detectionPassed = ExecuteDetectionLogic(toolBlockResult);
                 _logger.Information("检测逻辑执行完成 - Result={Result}",
                     detectionPassed ? "合格" : "不合格");
@@ -421,7 +421,7 @@ namespace aoi_common.Services
                 // 检测结果 (01=OK, 02=NG)
                 sb.Append(result.IsSuccess ? "01" : "02");
 
-                // 📌 TODO: 这里添加你的检测数据
+             
                 // 例如：长度、宽度、角度等参数
                 // sb.Append(Convert.ToInt32(Math.Round(length * 1000)).ToString("D8"));
                 // sb.Append(Convert.ToInt32(Math.Round(width * 1000)).ToString("D8"));
@@ -472,5 +472,6 @@ namespace aoi_common.Services
                 _logger.Error(ex, "发送PLC消息失败");
             }
         }
+      
     }
 }
