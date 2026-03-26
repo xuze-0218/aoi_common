@@ -5,103 +5,427 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:aoi_common.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="450"
+    xmlns:mo="clr-namespace:aoi_common.Models"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="600"
     d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
-    <Grid Margin="10" Background="AliceBlue">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="1.5*" />
-        </Grid.ColumnDefinitions>
+    <UserControl.Resources>
+        <Style TargetType="DataGrid">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="RowHeight" Value="28" />
+        </Style>
+    </UserControl.Resources>
 
-        <GroupBox
-            Margin="5"
-            Background="White"
-            Header="接收解析 (Input Parser)">
-            <DataGrid
-                AutoGenerateColumns="False"
-                CanUserAddRows="True"
-                ItemsSource="{Binding InputFields}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn
-                        Width="*"
-                        Binding="{Binding Name}"
-                        Header="变量名" />
-                    <DataGridTextColumn
-                        Width="60"
-                        Binding="{Binding StartIndex}"
-                        Header="起始位" />
-                    <DataGridTextColumn
-                        Width="60"
-                        Binding="{Binding Length}"
-                        Header="长度" />
-                </DataGrid.Columns>
-            </DataGrid>
-        </GroupBox>
+    <!--  ✅ 移除 MaxWidth，改为 HorizontalAlignment="Stretch"  -->
+    <Grid
+        MaxHeight="700"
+        Margin="10"
+        Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
 
-        <GroupBox
-            Grid.Column="1"
-            Margin="5"
-            Background="White"
-            Header="发送拼装 (Output Assembler)">
-            <DockPanel>
-                <StackPanel
-                    HorizontalAlignment="Right"
-                    DockPanel.Dock="Bottom"
-                    Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center" Text="总长度预览: " />
+        <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="14"
+                FontWeight="Bold"
+                Foreground="#333"
+                Text="电文配置编辑器" />
+            <Button
+                Margin="20,0,0,0"
+                Padding="8,4"
+                Command="{Binding LoadConfigCommand}"
+                Content="加载配置"
+                FontSize="11"
+                ToolTip="从 Config/ProtocolConfig.json 加载现有配置" />
+            <Button
+                Margin="5,0,0,0"
+                Padding="8,4"
+                Command="{Binding SaveConfigCommand}"
+                Content="保存配置"
+                FontSize="11"
+                ToolTip="保存当前配置到 Config/ProtocolConfig.json" />
+            <Separator Margin="15,0,15,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+            <TextBlock
+                Margin="10,0,5,0"
+                VerticalAlignment="Center"
+                FontSize="11"
+                Text="模板名称:" />
+            <TextBox
+                Width="120"
+                Padding="4,3"
+                FontSize="11"
+                Text="{Binding TemplateName}"
+                ToolTip="当前配置模板的名称" />
+            <Button
+                Padding="8,4"
+                HorizontalAlignment="Right"
+                Command="{Binding CloseDialogCommand}"
+                Content="关闭"
+                FontSize="11"
+                ToolTip="关闭此对话框" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="0,5,0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1.2*" />
+            </Grid.ColumnDefinitions>
+
+            <GroupBox
+                Margin="5,0,5,0"
+                Padding="8"
+                Background="White"
+                FontSize="11"
+                Header="接收解析">
+                <DockPanel>
                     <TextBlock
-                        Margin="0,0,10,0"
-                        VerticalAlignment="Center"
-                        FontWeight="Bold"
-                        Foreground="Blue"
-                        Text="{Binding TotalLength}" />
-                    <Button
-                        Width="80"
-                        Margin="5"
-                        Command="{Binding SortCommand}"
-                        Content="按索引重排" />
-                </StackPanel>
+                        Margin="0,0,0,8"
+                        DockPanel.Dock="Top"
+                        FontSize="10"
+                        Foreground="#666"
+                        Text="定义如何从原始电文中提取字段。根据『起始位』和『长度』截取子字符串，存入变量池。"
+                        TextWrapping="Wrap" />
 
-                <DataGrid
-                    AutoGenerateColumns="False"
-                    CanUserAddRows="True"
-                    ItemsSource="{Binding OutputFields}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn
-                            Width="40"
-                            Binding="{Binding Index}"
-                            Header="索引" />
+                    <StackPanel
+                        Margin="0,8,0,0"
+                        DockPanel.Dock="Bottom"
+                        Orientation="Vertical">
+                        <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                            <Button
+                                Width="60"
+                                Margin="0,0,3,0"
+                                Padding="4,3"
+                                Command="{Binding AddInputFieldCommand}"
+                                Content="+ 添加"
+                                FontSize="10"
+                                ToolTip="新增一个接收字段定义" />
+                            <Button
+                                Width="60"
+                                Margin="0,0,0,0"
+                                Padding="4,3"
+                                Content="- 删除"
+                                FontSize="10"
+                                ToolTip="删除所选接收字段（在表格中选中后点击）" />
+                        </StackPanel>
 
-                        <DataGridComboBoxColumn
-                            Width="80"
-                            Header="来源类型"
-                            ItemsSource="{Binding SourceTypes}"
-                            SelectedItemBinding="{Binding Source}" />
+                        <!--  测试数据区  -->
+                        <Border
+                            Margin="0,0,0,5"
+                            BorderBrush="#DDD"
+                            BorderThickness="1"
+                            CornerRadius="2">
+                            <StackPanel Margin="5" Background="#F9F9F9">
+                                <TextBlock
+                                    Margin="0,0,0,3"
+                                    FontSize="10"
+                                    FontWeight="Bold"
+                                    Foreground="#333"
+                                    Text="测试原始电文:" />
+                                <TextBox
+                                    Height="50"
+                                    Margin="0,0,0,5"
+                                    Padding="4"
+                                    FontFamily="Courier New"
+                                    FontSize="9"
+                                    Text="{Binding TestRawData, UpdateSourceTrigger=PropertyChanged}"
+                                    TextWrapping="Wrap"
+                                    ToolTip="粘贴原始电文数据，例如：$12963003000200045001..."
+                                    VerticalScrollBarVisibility="Auto" />
+                                <Button
+                                    Height="28"
+                                    Padding="4,3"
+                                    Command="{Binding ParseTestCommand}"
+                                    Content="解析测试"
+                                    FontSize="10"
+                                    ToolTip="使用上方电文数据和配置进行解析，在右侧查看结果" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
 
-                        <DataGridTextColumn
-                            Width="*"
-                            Binding="{Binding NameOrValue}"
-                            Header="变量名/固定值" />
+                    <!--  字段表格 - ✅ 使用 Star(*) 宽度让列自动分配  -->
+                    <DataGrid
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        ItemsSource="{Binding InputFields}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                Header="变量名" />
 
-                        <DataGridTextColumn
-                            Width="50"
-                            Binding="{Binding Length}"
-                            Header="长度" />
-                        <DataGridTextColumn
-                            Width="50"
-                            Binding="{Binding Scale}"
-                            Header="倍率" />
+                            <DataGridTextColumn
+                                Width="50"
+                                Binding="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}"
+                                Header="起始位" />
 
-                        <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding Preview}"
-                            Foreground="Gray"
-                            Header="预览"
-                            IsReadOnly="True" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                            <DataGridTextColumn
+                                Width="45"
+                                Binding="{Binding Length, UpdateSourceTrigger=PropertyChanged}"
+                                Header="长度" />
+
+                            <DataGridTextColumn
+                                Width="80"
+                                Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                Header="说明" />
+
+                            <DataGridTemplateColumn Width="40" Header="删除">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button
+                                            Margin="1"
+                                            Padding="2,1"
+                                            Background="#FFE0E0"
+                                            Click="OnDeleteInputField"
+                                            Content="🗑️"
+                                            FontSize="9"
+                                            ToolTip="删除此字段" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </GroupBox>
+
+            <DockPanel Grid.Column="1" Margin="5,0,0,0">
+                <GroupBox
+                    Padding="8"
+                    Background="White"
+                    DockPanel.Dock="Top"
+                    FontSize="11"
+                    Header="发送拼装">
+                    <DockPanel>
+                        <TextBlock
+                            Margin="0,0,0,5"
+                            DockPanel.Dock="Top"
+                            FontSize="10"
+                            Foreground="#666"
+                            Text="定义输出电文的结构。按『序号』从上往下依次拼接。"
+                            TextWrapping="Wrap" />
+
+                        <StackPanel
+                            Margin="0,5,0,0"
+                            DockPanel.Dock="Bottom"
+                            Orientation="Horizontal">
+                            <Button
+                                Width="60"
+                                Margin="0,0,3,0"
+                                Padding="4,3"
+                                Command="{Binding AddOutputFieldCommand}"
+                                Content="+ 添加"
+                                FontSize="10"
+                                ToolTip="新增一个输出字段定义" />
+                            <Button
+                                Width="60"
+                                Margin="0,0,5,0"
+                                Padding="4,3"
+                                Content="- 删除"
+                                FontSize="10"
+                                ToolTip="删除所选输出字段（在表格中选中后点击）" />
+                            <Separator Margin="5,0,5,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                            <Button
+                                Width="70"
+                                Margin="0,0,5,0"
+                                Padding="3,3"
+                                Command="{Binding SortCommand}"
+                                Content="排序"
+                                FontSize="10"
+                                ToolTip="根据『序号』列重新排序所有字段" />
+                            <Separator Margin="5,0,5,0" Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                            <TextBlock
+                                Margin="5,0,3,0"
+                                VerticalAlignment="Center"
+                                FontSize="10"
+                                FontWeight="Bold"
+                                Text="总长:" />
+                            <TextBlock
+                                Margin="0,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="11"
+                                FontWeight="Bold"
+                                Foreground="DodgerBlue"
+                                Text="{Binding TotalLength}" />
+                        </StackPanel>
+
+                        <DataGrid
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserDeleteRows="False"
+                            ItemsSource="{Binding OutputFields}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn
+                                    Width="35"
+                                    Binding="{Binding Index, UpdateSourceTrigger=PropertyChanged}"
+                                    Header="序" />
+
+                                <DataGridComboBoxColumn
+                                    Width="60"
+                                    Header="来源"
+                                    SelectedItemBinding="{Binding Source, UpdateSourceTrigger=PropertyChanged}">
+                                    <DataGridComboBoxColumn.ItemsSource>
+                                        <x:Array Type="mo:FieldSource">
+                                            <mo:FieldSource>Fixed</mo:FieldSource>
+                                            <mo:FieldSource>Variable</mo:FieldSource>
+                                            <mo:FieldSource>Padding</mo:FieldSource>
+                                        </x:Array>
+                                    </DataGridComboBoxColumn.ItemsSource>
+                                </DataGridComboBoxColumn>
+
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                    Header="变量名/值" />
+
+                                <DataGridTextColumn
+                                    Width="45"
+                                    Binding="{Binding Length, UpdateSourceTrigger=PropertyChanged}"
+                                    Header="长度" />
+
+                                <DataGridTextColumn
+                                    Width="45"
+                                    Binding="{Binding Scale, UpdateSourceTrigger=PropertyChanged}"
+                                    Header="缩放" />
+
+                                <DataGridTextColumn
+                                    Width="60"
+                                    Binding="{Binding Preview}"
+                                    Foreground="#0066CC"
+                                    Header="预览"
+                                    IsReadOnly="True" />
+
+                                <DataGridTemplateColumn Width="40" Header="删除">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button
+                                                Margin="1"
+                                                Padding="2,1"
+                                                Background="#FFE0E0"
+                                                Click="OnDeleteOutputField"
+                                                Content="🗑️"
+                                                FontSize="9"
+                                                ToolTip="删除此字段" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </GroupBox>
+
+                <GroupBox
+                    Margin="0,5,0,0"
+                    Padding="8"
+                    Background="White"
+                    DockPanel.Dock="Bottom"
+                    FontSize="11"
+                    Header="实时预览">
+                    <DockPanel>
+                        <StackPanel
+                            Margin="0,0,0,5"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Button
+                                Width="80"
+                                Margin="0,0,5,0"
+                                Padding="4,3"
+                                Command="{Binding PreviewOutputCommand}"
+                                Content="生成预览"
+                                FontSize="10"
+                                ToolTip="根据当前配置和变量池生成输出电文" />
+                            <TextBlock
+                                Margin="5,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="10"
+                                FontWeight="Bold"
+                                Foreground="Green"
+                                Text="{Binding PreviewMessage}" />
+                        </StackPanel>
+
+                        <Grid DockPanel.Dock="Bottom">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!--  标题  -->
+                            <TextBlock
+                                Margin="3,3,3,2"
+                                FontSize="10"
+                                FontWeight="Bold"
+                                Foreground="#333"
+                                Text="【解析结果】" />
+
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="3,3,3,2"
+                                FontSize="10"
+                                FontWeight="Bold"
+                                Foreground="#333"
+                                Text="【生成报文】" />
+
+                            <Border
+                                Grid.Row="1"
+                                Margin="3,0,1,0"
+                                BorderBrush="#CCC"
+                                BorderThickness="1"
+                                CornerRadius="2">
+                                <TextBox
+                                    Padding="4"
+                                    Background="#F9F9F9"
+                                    BorderThickness="0"
+                                    FontFamily="Courier New"
+                                    FontSize="9"
+                                    IsReadOnly="True"
+                                    Text="{Binding ParseResult, Mode=OneWay}"
+                                    TextWrapping="Wrap"
+                                    VerticalScrollBarVisibility="Auto" />
+                            </Border>
+
+                            <Border
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Margin="1,0,3,0"
+                                BorderBrush="#CCC"
+                                BorderThickness="1"
+                                CornerRadius="2">
+                                <TextBox
+                                    Padding="4"
+                                    Background="#E6F2FF"
+                                    BorderThickness="0"
+                                    FontFamily="Courier New"
+                                    FontSize="9"
+                                    IsReadOnly="True"
+                                    Text="{Binding GeneratedMessage, Mode=OneWay}"
+                                    TextWrapping="Wrap"
+                                    VerticalScrollBarVisibility="Auto" />
+                            </Border>
+                        </Grid>
+                    </DockPanel>
+                </GroupBox>
             </DockPanel>
-        </GroupBox>
+        </Grid>
+
+        <StatusBar
+            Grid.Row="2"
+            Background="#F0F0F0"
+            FontSize="10">
+            <StatusBarItem>
+                <TextBlock Foreground="#666" Text="{Binding StatusMessage}" />
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Foreground="#999" Text="就绪" />
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </UserControl>

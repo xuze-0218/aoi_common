@@ -1,4 +1,6 @@
-﻿using System;
+﻿using aoi_common.Models;
+using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,75 +8,185 @@ using System.Threading.Tasks;
 
 namespace aoi_common.Services
 {
-    public class ProtocolEngineService
+
+    public interface IProtocolEngineService
     {
-        // 全局变量池：所有数据以 String 存储
+        Dictionary<string, string> VariablePool { get; }
+        /// <summary>
+        /// 解析输入电文：根据配置的 Offset 和 Length 截取并存入变量池
+        /// </summary>
+        /// <param name="rawData"></param>
+        /// <param name="inputConfig"></param>
+        void ParseInput(string rawData, List<ProtocolField> inputConfig);
+        /// <summary>
+        /// 构建输出电文：按照配置的 Index 从变量池取值（或固定值/空白），处理缩放和长度对齐，最终拼接成完整字符串
+        /// </summary>
+        /// <param name="outputConfig"></param>
+        /// <returns></returns>
+        string BuildOutput(List<ProtocolField> outputConfig);
+        void SetVariable(string name, object value);
+        void ClearVariables();
+        string GetVariable(string name);
+    }
+
+    public class ProtocolEngineService: IProtocolEngineService
+    {
+        private readonly ILogger _logger;
+
         public Dictionary<string, string> VariablePool { get; private set; } = new Dictionary<string, string>();
 
-        // 解析接收电文：按照配置的 Offset 和 Length 截取并存入池子
-        public void ParseInput(string rawData, List<Models.ProtocolField> config)
+        public ProtocolEngineService(ILogger logger = null)
         {
-            foreach (var field in config)
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// 解析接收的原始报文：按配置截取字符串并存入变量池
+        /// </summary>
+        public void ParseInput(string rawData, List<ProtocolField> inputConfig)
+        {
+            if (string.IsNullOrEmpty(rawData))
             {
-                // 注意：解析时根据 Index 或逻辑起始位截取
-                // 这里假设解析配置里存了 StartIndex（可以通过 FixedValue 临时借用或扩展字段）
-                if (int.TryParse(field.FixedValue, out int start) && rawData.Length >= start + field.Length)
+                _logger?.Warning("接收数据为空");
+                return;
+            }
+
+            try
+            {
+                foreach (var field in inputConfig)
                 {
-                    VariablePool[field.Name] = rawData.Substring(start, field.Length).Trim();
+                    int start = field.StartIndex;
+                    int length = field.Length;
+
+                    // 边界检查
+                    if (start < 0 || length <= 0)
+                    {
+                        _logger?.Warning("字段 {FieldName} 配置无效 (Start={Start}, Length={Length})",
+                            field.Name, start, length);
+                        continue;
+                    }
+
+                    if (rawData.Length < start + length)
+                    {
+                        _logger?.Warning("字段 {FieldName} 超出数据范围 (需要 {Required}, 实际 {Actual})",
+                            field.Name, start + length, rawData.Length);
+                        continue;
+                    }
+
+                    //直接截取字符串，不做类型转换
+                    string value = rawData.Substring(start, length).Trim();
+                    VariablePool[field.Name] = value;
+
+                    _logger?.Debug("解析字段: {FieldName} = '{Value}'", field.Name, value);
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex, "解析输入数据异常");
             }
         }
 
-        // 视觉结果写入变量池
+        /// <summary>
+        /// 拼装输出报文：按 Index 顺序从上往下依次拼接字符串
+        /// </summary>
+        public string BuildOutput(List<ProtocolField> outputConfig)
+        {
+            if (outputConfig == null || outputConfig.Count == 0)
+            {
+                _logger?.Warning("输出配置为空");
+                return string.Empty;
+            }
+
+            try
+            {
+                var sb = new StringBuilder();
+
+                // 关键：严格按 Index 从小到大排序
+                var sortedFields = outputConfig.OrderBy(f => f.Index).ToList();
+
+                foreach (var field in sortedFields)
+                {
+                    string rawContent = GetFieldContent(field);
+
+                    // 强制长度对齐：不足补'0'，超出截断
+                    string alignedContent = AlignContent(rawContent, field.Length);
+                    sb.Append(alignedContent);
+
+                    _logger?.Debug("字段 {FieldName} → '{Content}' (长度: {Length})",
+                        field.Name, alignedContent, field.Length);
+                }
+
+                string result = sb.ToString();
+                _logger?.Information("生成输出报文，总长度: {Length}", result.Length);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex, "构建输出报文异常");
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 获取字段内容（根据来源）
+        /// </summary>
+        private string GetFieldContent(ProtocolField field)
+        {
+            switch (field.Source)
+            {
+                case FieldSource.Fixed:
+                    // 固定值直接返回
+                    return field.FixedValue ?? "";
+
+                case FieldSource.Variable:
+                    // 从变量池取值
+                    if (VariablePool.TryGetValue(field.Name, out string val))
+                    {
+                        //处理缩放：float 1.24 * 1000 → "1240"
+                        if (field.Scale != 1.0 && double.TryParse(val, out double d))
+                        {
+                            return Math.Round(d * field.Scale).ToString();
+                        }
+                        return val;
+                    }
+                    // 变量不存在，使用默认值
+                    return field.FixedValue ?? "";
+
+                case FieldSource.Padding:
+                    // 填充模式返回空，长度对齐会补齐
+                    return "";
+
+                default:
+                    return "";
+            }
+        }
+
+        /// <summary>
+        /// 内容长度对齐
+        /// </summary>
+        private string AlignContent(string content, int length)
+        {
+            if (content.Length > length)
+                return content.Substring(0, length);  // 超长截断
+            else
+                return content.PadLeft(length, '0');  // 不足补'0'
+        }
+
         public void SetVariable(string name, object value)
         {
             VariablePool[name] = value?.ToString() ?? "";
+            _logger?.Debug("设置变量: {Name} = '{Value}'", name, value);
         }
 
-        // 核心功能：拼装发送电文 (按索引排序)
-        public string BuildOutput(List<Models.ProtocolField> config)
+        public string GetVariable(string name)
         {
-            StringBuilder sb = new StringBuilder();
+            return VariablePool.TryGetValue(name, out var value) ? value : "";
+        }
 
-            // 关键：严格按 Index 从小到大排序
-            var sortedFields = config.OrderBy(f => f.Index).ToList();
-
-            foreach (var field in sortedFields)
-            {
-                string rawContent = "";
-
-                switch (field.Source)
-                {
-                    case Models.FieldSource.Fixed:
-                        rawContent = field.FixedValue;
-                        break;
-                    case Models.FieldSource.Padding:
-                        rawContent = ""; // 后面补齐长度
-                        break;
-                    case Models.FieldSource.Variable:
-                        if (VariablePool.TryGetValue(field.Name, out string val))
-                        {
-                            // 处理缩放 (String -> Double -> Multiply -> String)
-                            if (field.Scale != 1.0 && double.TryParse(val, out double d))
-                                rawContent = Math.Round(d * field.Scale).ToString();
-                            else
-                                rawContent = val;
-                        }
-                        else
-                        {
-                            rawContent = field.FixedValue; // 变量池没有则取默认值
-                        }
-                        break;
-                }
-
-                // 强制长度对齐：不足补'0'，超出截断
-                if (rawContent.Length > field.Length)
-                    sb.Append(rawContent.Substring(0, field.Length));
-                else
-                    sb.Append(rawContent.PadLeft(field.Length, '0'));
-            }
-
-            return sb.ToString();
+        public void ClearVariables()
+        {
+            VariablePool.Clear();
+            _logger?.Debug("变量池已清空");
         }
     }
 }

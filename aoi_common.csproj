@@ -228,6 +228,7 @@
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\AlgorithmDebugViewModel.cs" />
     <Compile Include="ViewModels\ParamConfigViewModel.cs" />
+    <Compile Include="ViewModels\ProtocolConfigViewModel.cs" />
     <Compile Include="Views\CameraDebugView.xaml.cs">
       <DependentUpon>CameraDebugView.xaml</DependentUpon>
     </Compile>

@@ -29,6 +29,7 @@
                 <MenuItem Command="{Binding CameraDebugCommand}" Header="相机调试" />
                 <MenuItem Command="{Binding ParaDebugCommand}" Header="参数配置" />
                 <MenuItem Command="{Binding CommunicateDebugCommand}" Header="通讯配置" />
+                <MenuItem Command="{Binding ProtocolConfigDebugCommand}" Header="报文配置" />
             </MenuItem>
         </Menu>
 

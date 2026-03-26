@@ -60,6 +60,7 @@ namespace aoi_common.ViewModels
         public DelegateCommand CameraDebugCommand { get; private set; }
         public DelegateCommand ParaDebugCommand { get; private set; }
         public DelegateCommand CommunicateDebugCommand { get; private set; }
+        public DelegateCommand ProtocolConfigDebugCommand { get; private set; }
         public DelegateCommand ImportImageCommand { get; private set; }
 
         public DelegateCommand OfflineSingleImageCommand { get; private set; }      // 离线单张
@@ -102,6 +103,9 @@ namespace aoi_common.ViewModels
 
             CommunicateDebugCommand = new DelegateCommand(
                 () => { _dialogService.Show("CommunicationView", new DialogParameters(), r => { }); });
+
+            ProtocolConfigDebugCommand = new DelegateCommand(
+                () => { _dialogService.Show("ProtocolConfigView", new DialogParameters(), r => { }); });
 
             OfflineSingleImageCommand = new DelegateCommand(async () =>
             {

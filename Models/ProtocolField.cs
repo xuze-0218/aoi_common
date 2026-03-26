@@ -1,18 +1,11 @@
 ﻿using Prism.Mvvm;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace aoi_common.Models
 {
     // 字段来源：固定文本、变量池映射、空白填充
     public enum FieldSource { Fixed, Variable, Padding }
 
-    public class ProtocolField:BindableBase
+    public class ProtocolField : BindableBase
     {
         private int _index;
         private string _name = "";
@@ -20,31 +13,100 @@ namespace aoi_common.Models
         private int _length;
         private double _scale = 1.0;
         private string _fixedValue = "";
+        private int _startIndex;  // 仅用于输入侧
+        private string _description = "";
+        private string _preview = "";
 
-        // 1. 排序索引 (0, 1, 2...)
-        public int Index { get => _index; set { _index = value; SetProperty(ref _index,value); } }
+        // ====== 通用字段 ======
+        /// <summary>
+        /// 排序索引（输出侧用于确定电文中的位置）
+        /// </summary>
+        public int Index
+        {
+            get => _index;
+            set => SetProperty(ref _index, value);
+        }
 
-        // 2. 自定义名称 (对应变量池中的Key)
-        public string Name { get => _name; set { _name = value; SetProperty(ref _name,value); } }
+        /// <summary>
+        /// 字段名称（对应变量池中的 Key）
+        /// </summary>
+        public string Name
+        {
+            get => _name;
+            set => SetProperty(ref _name, value);
+        }
 
-        // 3. 来源类型
-        public FieldSource Source { get => _source; set { _source = value; SetProperty(ref _source,value); } }
+        /// <summary>
+        /// 字段来源类型
+        /// </summary>
+        public FieldSource Source
+        {
+            get => _source;
+            set => SetProperty(ref _source, value);
+        }
 
-        // 4. 占用长度
-        public int Length { get => _length; set { _length = value; SetProperty(ref _length ,value); } }
+     
+        public int Length
+        {
+            get => _length;
+            set => SetProperty(ref _length, value);
+        }
 
-        // 5. 倍率 (仅Variable生效)
-        public double Scale { get => _scale; set { _scale = value; SetProperty( ref _scale,value); } }
+        /// <summary>
+        /// 缩放因子（仅 Variable 生效，用于处理浮点数）
+        /// 例如：1.24 * 1000 = 1240
+        /// </summary>
+        public double Scale
+        {
+            get => _scale;
+            set => SetProperty(ref _scale, value);
+        }
 
-        // 6. 固定值/默认值 (Fixed类型存文本, Variable类型存默认空值)
-        public string FixedValue { get => _fixedValue; set { _fixedValue = value; SetProperty(ref _fixedValue ,value); } }
+        /// <summary>
+        /// 固定值或默认值
+        /// - 当 Source=Fixed：存储固定内容
+        /// - 当 Source=Variable：存储变量不存在时的默认值
+        /// </summary>
+        public string FixedValue
+        {
+            get => _fixedValue;
+            set => SetProperty(ref _fixedValue, value);
+        }
 
-       
+        // ====== 仅输入侧 ======
+        /// <summary>
+        /// 原始电文中的起始位置（从 0 开始）
+        /// 仅用于接收解析
+        /// </summary>
+        public int StartIndex
+        {
+            get => _startIndex;
+            set => SetProperty(ref _startIndex, value);
+        }
+
+      
+        public string Description
+        {
+            get => _description;
+            set => SetProperty(ref _description, value);
+        }
+
+        // ====== 预览字段 ======
+        /// <summary>
+        /// 预览：根据当前变量池内容显示预期的字段值
+        /// 只读，由 ViewModel 计算维护
+        /// </summary>
+        public string Preview
+        {
+            get => _preview;
+            set => SetProperty(ref _preview, value);
+        }
     }
 
     public class FullProtocolConfig
     {
-        public string TemplateName { get; set; }
+        public string TemplateName { get; set; } = "DefaultTemplate";
+        public string Description { get; set; } = "";
         public List<ProtocolField> InputFields { get; set; } = new List<ProtocolField>();
         public List<ProtocolField> OutputFields { get; set; } = new List<ProtocolField>();
     }

@@ -44,6 +44,11 @@ namespace aoi_common
             containerRegistry.RegisterDialog<CommunicationView, CommunicationViewModel>();
             //注册检测会话服务(检测逻辑)
             containerRegistry.RegisterSingleton<IDetectionSessionService, DetectionSessionService>();
+            //报文解析服务
+            containerRegistry.RegisterSingleton<IProtocolEngineService,ProtocolEngineService>();
+
+            //报文解析
+            containerRegistry.RegisterDialog<ProtocolConfigView, ProtocolConfigViewModel>();
 
             Log.Logger = new LoggerConfiguration().MinimumLevel.Information().Enrich.FromLogContext()
                 .WriteTo.Async(a => a.File("Logs/log_.txt",
