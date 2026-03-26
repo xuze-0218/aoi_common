@@ -9,57 +9,60 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <Grid Margin="10" Background="AliceBlue">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="1.5*" />
+        </Grid.ColumnDefinitions>
 
-        <StackPanel
-            Grid.Row="0"
-            Margin="0,0,0,10"
-            Orientation="Horizontal">
-            <Button
-                Width="80"
-                Margin="0,0,10,0"
-                Click="NewConfig_Click"
-                Content="新建配置" />
-            <Button
-                Width="80"
-                Margin="0,0,10,0"
-                Click="LoadConfig_Click"
-                Content="加载 JSON" />
-            <Button
-                Width="80"
-                Background="LightGreen"
-                Click="SaveConfig_Click"
-                Content="保存配置" />
-        </StackPanel>
+        <GroupBox
+            Margin="5"
+            Background="White"
+            Header="接收解析 (Input Parser)">
+            <DataGrid
+                AutoGenerateColumns="False"
+                CanUserAddRows="True"
+                ItemsSource="{Binding InputFields}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Width="*"
+                        Binding="{Binding Name}"
+                        Header="变量名" />
+                    <DataGridTextColumn
+                        Width="60"
+                        Binding="{Binding StartIndex}"
+                        Header="起始位" />
+                    <DataGridTextColumn
+                        Width="60"
+                        Binding="{Binding Length}"
+                        Header="长度" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
 
-        <UniformGrid Grid.Row="1" Columns="2">
-            <GroupBox Header="1. 接收电文解析">
-                <DataGrid
-                    AutoGenerateColumns="False"
-                    CanUserAddRows="True"
-                    ItemsSource="{Binding InputFields}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn
-                            Width="*"
-                            Binding="{Binding Name}"
-                            Header="变量名" />
-                        <DataGridTextColumn
-                            Width="60"
-                            Binding="{Binding StartIndex}"
-                            Header="起始位" />
-                        <DataGridTextColumn
-                            Width="60"
-                            Binding="{Binding Length}"
-                            Header="长度" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </GroupBox>
+        <GroupBox
+            Grid.Column="1"
+            Margin="5"
+            Background="White"
+            Header="发送拼装 (Output Assembler)">
+            <DockPanel>
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    DockPanel.Dock="Bottom"
+                    Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="总长度预览: " />
+                    <TextBlock
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center"
+                        FontWeight="Bold"
+                        Foreground="Blue"
+                        Text="{Binding TotalLength}" />
+                    <Button
+                        Width="80"
+                        Margin="5"
+                        Command="{Binding SortCommand}"
+                        Content="按索引重排" />
+                </StackPanel>
 
-            <GroupBox Header="2. 发送电文拼装">
                 <DataGrid
                     AutoGenerateColumns="False"
                     CanUserAddRows="True"
@@ -69,15 +72,18 @@
                             Width="40"
                             Binding="{Binding Index}"
                             Header="索引" />
+
                         <DataGridComboBoxColumn
-                            Width="100"
+                            Width="80"
                             Header="来源类型"
-                            ItemsSource="{Binding SourceTypeValues}"
+                            ItemsSource="{Binding SourceTypes}"
                             SelectedItemBinding="{Binding Source}" />
+
                         <DataGridTextColumn
                             Width="*"
                             Binding="{Binding NameOrValue}"
                             Header="变量名/固定值" />
+
                         <DataGridTextColumn
                             Width="50"
                             Binding="{Binding Length}"
@@ -86,16 +92,16 @@
                             Width="50"
                             Binding="{Binding Scale}"
                             Header="倍率" />
+
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding Preview}"
+                            Foreground="Gray"
+                            Header="预览"
+                            IsReadOnly="True" />
                     </DataGrid.Columns>
                 </DataGrid>
-            </GroupBox>
-        </UniformGrid>
-
-        <TextBlock
-            Name="StatusText"
-            Grid.Row="2"
-            Margin="0,10,0,0"
-            Foreground="Gray"
-            Text="就绪" />
+            </DockPanel>
+        </GroupBox>
     </Grid>
 </UserControl>
