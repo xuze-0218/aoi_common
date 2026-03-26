@@ -58,7 +58,7 @@ namespace aoi_common.Services
         private string _currentPlcData;
         private TaskCompletionSource<DetectionResultModel> _sessionCompletionSource;
         private ProtocolParse _currentProtocolParse;
-        private DetectionSessionType _currentSessionType = DetectionSessionType.Online; 
+        private DetectionSessionType _currentSessionType = DetectionSessionType.Online;
         private DetectionSessionState _currentState = DetectionSessionState.Idle;
         public DetectionSessionState CurrentState => _currentState;
 
@@ -207,7 +207,7 @@ namespace aoi_common.Services
             try
             {
                 int itemCode = _currentSessionResult.ItemCode;
-
+                //bool result = DetectComplexFilm();
                 // 根据ItemCode调用不同的检测方法
                 //bool result = itemCode switch
                 //{
@@ -268,11 +268,9 @@ namespace aoi_common.Services
                 _logger.Debug(" PLC报文已解析 - ItemCode={ItemCode}, Message={Message}",
                     _currentSessionResult.ItemCode, _currentSessionResult.Message);
 
-                if (!_currentProtocolParse.IsValid)
+                if (!_currentSessionResult.IsSuccess)
                 {
                     _currentState = DetectionSessionState.Failed;
-                    _logger.Error(" 报文解析失败: {Error}", _currentProtocolParse.ErrorMsg);
-                    _currentSessionResult.IsSuccess = false;
                     return _currentSessionResult;
                 }
                 int finalType = _currentSessionResult.ItemCode;
@@ -362,13 +360,13 @@ namespace aoi_common.Services
 
             try
             {
-                _currentSessionType = DetectionSessionType.Offline; 
+                _currentSessionType = DetectionSessionType.Offline;
                 _currentState = DetectionSessionState.WaitingForImageOffline;
                 _sessionCompletionSource = new TaskCompletionSource<DetectionResultModel>();
 
                 _logger.Information("========== 开始离线检测会话 ==========");
 
-               
+
                 _currentSessionResult = new DetectionResultModel
                 {
                     ItemCode = 1,  // 默认为单个胶块检测
@@ -512,7 +510,7 @@ namespace aoi_common.Services
         }
 
         /// <summary>
-        /// 构建PLC回复报文
+        /// PLC回复报文
         /// </summary>
         /// <returns></returns>
         private string BuildPlcResponseMessage(DetectionResultModel result, ToolBlockResultModel toolBlockResult)
@@ -527,7 +525,7 @@ namespace aoi_common.Services
                 // 检测结果 (01=OK, 02=NG)
                 sb.Append(result.IsSuccess ? "01" : "02");
 
-             
+
                 // 例如：长度、宽度、角度等参数
                 // sb.Append(Convert.ToInt32(Math.Round(length * 1000)).ToString("D8"));
                 // sb.Append(Convert.ToInt32(Math.Round(width * 1000)).ToString("D8"));
@@ -578,6 +576,118 @@ namespace aoi_common.Services
                 _logger.Error(ex, "发送PLC消息失败");
             }
         }
-      
+
+        //private bool DetectComplexFilm()
+        //{
+        //    if (_config.GetInt("输入参数", "cellOrNot") == 0)
+        //    {
+        //        _currentSessionResult.Message = "电芯未检测到！";
+        //        return false;
+        //    }
+        //    float area = 1000f;//获取的vpp的outputs结果
+        //    double inRadio = _config.GetDouble("输入参数", "inRadio");//0.059
+        //    double filmArea = 11111 * Math.Pow(inRadio, 2);// 面胶膜颜色,从vpp获取
+        //    double cellRealArea = area* Math.Pow(inRadio, 2);
+       
+        //    double allowDeviation = _config.GetDouble("参数设置", "%允许面积偏差%");
+        //    double cellBlueArea = _config.GetDouble("参数设置", "%电芯蓝膜面积%");
+        //    double singleTapeArea = _config.GetDouble("参数设置", "%单个胶条面积%");
+        //    double singleBlockArea = _config.GetDouble("参数设置", "%单个胶块面积%");
+        //    double tearAreaThreshold = _config.GetDouble("面积阈值", "%胶撕膜面积%");
+
+        //    // 标准完整面积
+        //    double standardFullArea = cellBlueArea - 2 * singleTapeArea - singleBlockArea;
+
+        //    // 面积偏差判断
+        //    if (Math.Abs(cellRealArea - standardFullArea) < allowDeviation)
+        //    {
+        //        string sFilmArea = $"{filmArea:f3}mm²";
+
+        //        // 撕膜面积检查
+        //        if (filmArea < tearAreaThreshold)
+        //        {
+        //            // 小耳朵检测
+        //            if (_config.GetInt("全局变量","earOrNot") == 0)
+        //            {
+        //                string direct = _config.GetString("全局变量", "directBig");
+        //                if (direct is "上" or "下" or "左" or "右")
+        //                {
+        //                    bool earCheckFailed = direct is "上" or "下"
+        //                        ? !DetectEar($"耳朵{direct}.左1") || !DetectEar($"耳朵{direct}.右1") || !DetectEar($"耳朵{direct}.左2") || !DetectEar($"耳朵{direct}.右2")
+        //                        : !DetectEar($"耳朵{direct}.上1") || !DetectEar($"耳朵{direct}.下1") || !DetectEar($"耳朵{direct}.上2") || !DetectEar($"耳朵{direct}.下2");
+
+        //                    if (earCheckFailed) return false;
+        //                }
+        //            }
+
+        //            // 距离 / 面积检测
+        //            if (GetGlobalInt("disOrArea") == 0)
+        //            {
+        //                if (!GetGroupLine("单色胶")) return false;
+
+        //                // 距离计算
+        //                DistanceLL1(upLeftLineCell, upLeftLineTape, inRadio, out upLeftDist);
+        //                DistanceLL1(upRightLineCell, upRightLineTape, inRadio, out upRightDist);
+        //                DistanceLL1(downRightLineCell, downRightLineTape, inRadio, out downRightDist);
+        //                DistanceLL1(downLeftLineCell, downLeftLineTape, inRadio, out downLeftDist);
+        //                DistanceLL1(leftUpLineCell, leftUpLineTape, inRadio, out leftUpDist);
+        //                DistanceLL1(rightUpLineCell, rightUpLineTape, inRadio, out rightUpDist);
+        //                DistanceLL1(rightDownLineCell, rightDownLineTape, inRadio, out rightDownDist);
+        //                DistanceLL1(leftDownLineCell, leftDownLineTape, inRadio, out leftDownDist);
+        //                DistanceLL1(leftLineCell, leftLineTape, inRadio, out leftDist);
+        //                DistanceLL1(rightLineCell, rightLineTape, inRadio, out rightDist);
+
+        //                // 角度计算
+        //                LineAngle1(upLeftLineCell, upLeftLineTape, out upLeftAngle);
+        //                LineAngle1(upRightLineCell, upRightLineTape, out upRightAngle);
+        //                LineAngle1(downRightLineCell, downRightLineTape, out downRightAngle);
+        //                LineAngle1(downLeftLineCell, downLeftLineTape, out downLeftAngle);
+        //                LineAngle1(leftUpLineCell, leftUpLineTape, out leftUpAngle);
+        //                LineAngle1(rightUpLineCell, rightUpLineTape, out rightUpAngle);
+        //                LineAngle1(rightDownLineCell, rightDownLineTape, out rightDownAngle);
+        //                LineAngle1(leftDownLineCell, leftDownLineTape, out leftDownAngle);
+
+        //                if (!DetectComplexDistAndAngle()) return false;
+        //            }
+        //            else
+        //            {
+        //                if (!GetGroupArea("单色胶")) return false;
+        //                if (!DetectDoubleArea()) return false;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            outMsg = $"组合胶上撕膜有残留！面积：{filmArea:f3}mm²";
+        //            return false;
+        //        }
+        //    }
+        //    // 只检测到大面胶
+        //    else if (Math.Abs(cellRealArea - (cellBlueArea - singleBlockArea)) < allowDeviation)
+        //    {
+        //        outMsg = $"组合胶只检测到大面胶！电芯露出面积：{cellRealArea:f3}mm²";
+        //        return false;
+        //    }
+        //    // 只检测到双条胶
+        //    else if (Math.Abs(cellRealArea - (cellBlueArea - 2 * singleTapeArea)) < allowDeviation)
+        //    {
+        //        outMsg = $"组合胶只检测到双条胶！电芯露出面积：{cellRealArea:f3}mm²";
+        //        return false;
+        //    }
+        //    // 只检测到一条胶
+        //    else if (Math.Abs(cellRealArea - (cellBlueArea - singleTapeArea - singleBlockArea)) < allowDeviation)
+        //    {
+        //        outMsg = $"组合胶只检测到一条胶！电芯露出面积：{cellRealArea:f3}mm²";
+        //        return false;
+        //    }
+        //    // 未检测到组合胶
+        //    else
+        //    {
+        //        outMsg = $"组合胶未检测到！电芯露出面积：{cellRealArea:f3}mm²";
+        //        return false;
+        //    }
+
+        //    // 所有检测通过
+        //    return true;
+        //}
     }
 }

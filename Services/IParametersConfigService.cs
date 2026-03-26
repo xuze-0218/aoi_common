@@ -19,7 +19,7 @@ namespace aoi_common.Services
         bool SaveConfig(IEnumerable<ParametersConfig> configs);
         void UpdateParam(string moduleName, string paramName, string value, ParamOutputType type = ParamOutputType.STRING);
         int GetInt(string moduleName, string paramName, int defaultValue = 0);
-        float GetFloat(string moduleName, string paramName, float defaultValue = 0f);
+        double GetDouble(string moduleName, string paramName, double defaultValue = 0.0);
         string GetString(string moduleName, string paramName, string defaultValue = "");
         bool GetBool(string moduleName, string paramName, bool defaultValue = false);
     }
@@ -42,10 +42,10 @@ namespace aoi_common.Services
             return defaultValue;
         }
 
-        public float GetFloat(string moduleName, string paramName, float defaultValue = 0f)
+        public double GetDouble(string moduleName, string paramName, double defaultValue = 0.0)
         {
             var p = FindParam(moduleName, paramName);
-            if (p != null && float.TryParse(p.InitValue, out float result)) return result;
+            if (p != null && double.TryParse(p.InitValue, out double result)) return result;
             return defaultValue;
         }
 

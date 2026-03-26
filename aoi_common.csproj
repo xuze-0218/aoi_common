@@ -208,10 +208,12 @@
     <Compile Include="Models\CommunicationModel.cs" />
     <Compile Include="Models\DetectionSessionState.cs" />
     <Compile Include="Models\ParametersConfig.cs" />
+    <Compile Include="Models\ProtocolField.cs" />
     <Compile Include="Models\ProtocolParse.cs" />
     <Compile Include="Models\DetectionResultModel.cs" />
     <Compile Include="Models\LogEventModel.cs" />
     <Compile Include="Models\ToolBlockResultModel.cs" />
+    <Compile Include="Services\ConfigStorage.cs" />
     <Compile Include="Services\IApplicationStartupService.cs" />
     <Compile Include="Services\ICommunicationService.cs" />
     <Compile Include="Services\IDetectionSessionService.cs" />
@@ -219,6 +221,7 @@
     <Compile Include="Services\IMessageParsingService.cs" />
     <Compile Include="Services\IImageSource.cs" />
     <Compile Include="Services\ICameraConfigService.cs" />
+    <Compile Include="Services\ProtocolEngineService.cs" />
     <Compile Include="Services\VisionService.cs" />
     <Compile Include="ViewModels\CameraDebugViewModel.cs" />
     <Compile Include="ViewModels\CommunicationViewModel.cs" />
@@ -236,6 +239,9 @@
     </Compile>
     <Compile Include="Views\ParamConfigView.xaml.cs">
       <DependentUpon>ParamConfigView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProtocolConfigView.xaml.cs">
+      <DependentUpon>ProtocolConfigView.xaml</DependentUpon>
     </Compile>
     <Page Include="Views\CameraDebugView.xaml">
       <SubType>Designer</SubType>
@@ -262,6 +268,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ParamConfigView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProtocolConfigView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

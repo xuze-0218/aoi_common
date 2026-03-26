@@ -40,6 +40,8 @@ namespace aoi_common.Services
             var dc = new ProtocolParse(rawPlcData);
             if (!dc.IsValid)
             {
+                result.IsSuccess = false;
+                
                 SetError(result, logs, 98, dc.ErrorMsg);
                 return result;
             }
@@ -84,39 +86,7 @@ namespace aoi_common.Services
             res.Exposure = _config.GetInt("相机参数", "默认曝光");
             res.Gain = _config.GetInt("相机参数", "默认增益");
 
-            //switch (finalType)
-            //{
-            //    case 0: res.ItemCode = 93; res.Message = "该产品不应该贴胶！"; break;
-            //    case 1: res.ItemCode = 1; res.Message = "进入复杂大面（白膜黑胶）检测流程！"; res.IsSuccess = true; break;
-            //    case 2: res.ItemCode = 2; res.Message = "进入复杂大面（透明膜）检测流程！"; res.IsSuccess = true; break;
-            //    case 3:
-            //    case 4:
-            //        res.ItemCode = finalType;
-            //        res.Message = $"进入复杂双胶条（{(finalType == 3 ? "白膜黑胶" : "透明膜")}）检测流程！";
-            //        res.Exposure = _config.GetInt("相机参数", "胶条曝光");
-            //        res.Gain = _config.GetInt("相机参数", "胶条增益");
-            //        res.IsSuccess = true;
-            //        break;
-            //    case 5: res.ItemCode = 5; res.Message = "进入简易大面（白膜黑胶）检测流程！"; res.IsSuccess = true; break;
-            //    case 6: res.ItemCode = 6; res.Message = "进入简易大面（透明膜）检测流程！"; res.IsSuccess = true; break;
-            //    case 7:
-            //    case 8:
-            //        res.ItemCode = finalType;
-            //        res.Message = $"进入复杂三胶条（{(finalType == 7 ? "白膜黑胶" : "透明膜")}）检测流程！";
-            //        res.Exposure = _config.GetInt("相机参数", "胶条曝光");
-            //        res.Gain = _config.GetInt("相机参数", "胶条增益");
-            //        res.IsSuccess = true;
-
-            //        break;
-            //    case 9: res.ItemCode = 9; res.Message = "进入组合胶检测流程！"; res.IsSuccess = true; _visionService.AcquireImage(); break;
-            //    case 10: res.ItemCode = 10; res.Message = "进入备用胶2检测流程！"; res.IsSuccess = true; break;
-            //    default: res.ItemCode = 94; res.Message = $"PLC产品类型异常：{finalType}！"; break;
-            //}
-            //if (IsIgnored(finalType))
-            //{
-            //    res.ItemCode = 95;
-            //    res.Message = "该产品视觉屏蔽检测结果！";
-            //}
+          
             string detectionModeName = GetDetectionModeName(finalType);
             res.Message = $"进入检测模式: {detectionModeName}";
             logs.Add(res.Message);
@@ -127,16 +97,6 @@ namespace aoi_common.Services
 
 
         }
-
-        //private bool IsIgnored(int type)
-        //{
-        //    if (_config.GetBool("全局变量", "ignore")) return true;
-        //    string ignoreOne = _config.GetString("全局变量", "ignoreOne");
-
-        //    return (ignoreOne == "大面胶1" && (type == 1 || type == 2)) ||
-        //           (ignoreOne == "双条胶1" && (type == 3 || type == 4)) ||
-        //           (ignoreOne == "大面胶2" && (type == 7 || type == 8));
-        //}
 
         public int JudgeItemCode(int productType1, int productType2)
         {
@@ -205,7 +165,7 @@ namespace aoi_common.Services
             res.ItemCode = code;
             res.Message = msg;
             logs.Add(msg);
-            Log.Warning("检测逻辑被拦截: {Msg}", msg);
+            _logger.Error("检测逻辑被拦截,报文解析失败: {Error}", msg);
         }
 
         private void PopulateLogDetails(List<string> logs, ProtocolParse dc)

@@ -1,0 +1,101 @@
+﻿<UserControl
+    x:Class="aoi_common.Views.ProtocolConfigView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:aoi_common.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Grid Margin="10" Background="AliceBlue">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel
+            Grid.Row="0"
+            Margin="0,0,0,10"
+            Orientation="Horizontal">
+            <Button
+                Width="80"
+                Margin="0,0,10,0"
+                Click="NewConfig_Click"
+                Content="新建配置" />
+            <Button
+                Width="80"
+                Margin="0,0,10,0"
+                Click="LoadConfig_Click"
+                Content="加载 JSON" />
+            <Button
+                Width="80"
+                Background="LightGreen"
+                Click="SaveConfig_Click"
+                Content="保存配置" />
+        </StackPanel>
+
+        <UniformGrid Grid.Row="1" Columns="2">
+            <GroupBox Header="1. 接收电文解析">
+                <DataGrid
+                    AutoGenerateColumns="False"
+                    CanUserAddRows="True"
+                    ItemsSource="{Binding InputFields}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="*"
+                            Binding="{Binding Name}"
+                            Header="变量名" />
+                        <DataGridTextColumn
+                            Width="60"
+                            Binding="{Binding StartIndex}"
+                            Header="起始位" />
+                        <DataGridTextColumn
+                            Width="60"
+                            Binding="{Binding Length}"
+                            Header="长度" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+
+            <GroupBox Header="2. 发送电文拼装">
+                <DataGrid
+                    AutoGenerateColumns="False"
+                    CanUserAddRows="True"
+                    ItemsSource="{Binding OutputFields}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="40"
+                            Binding="{Binding Index}"
+                            Header="索引" />
+                        <DataGridComboBoxColumn
+                            Width="100"
+                            Header="来源类型"
+                            ItemsSource="{Binding SourceTypeValues}"
+                            SelectedItemBinding="{Binding Source}" />
+                        <DataGridTextColumn
+                            Width="*"
+                            Binding="{Binding NameOrValue}"
+                            Header="变量名/固定值" />
+                        <DataGridTextColumn
+                            Width="50"
+                            Binding="{Binding Length}"
+                            Header="长度" />
+                        <DataGridTextColumn
+                            Width="50"
+                            Binding="{Binding Scale}"
+                            Header="倍率" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+        </UniformGrid>
+
+        <TextBlock
+            Name="StatusText"
+            Grid.Row="2"
+            Margin="0,10,0,0"
+            Foreground="Gray"
+            Text="就绪" />
+    </Grid>
+</UserControl>

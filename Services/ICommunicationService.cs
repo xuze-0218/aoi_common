@@ -228,7 +228,7 @@ namespace aoi_common.Services
                     {
                         if (_tcpClient == null || !_tcpClient.Connected)
                         {
-                            _logger.Debug($"[TCP Client] 尝试连接至 {ip}:{port}...");
+                            _logger.Debug($"TCP客户端尝试连接至 {ip}:{port}...");
                             _tcpClient?.Close();
                             _tcpClient = new TcpClient();
 
@@ -239,18 +239,18 @@ namespace aoi_common.Services
                                 await connectTask;
                                 IsActive = true;
                                 ConnectionStatusChanged?.Invoke(true);
-                                _logger.Information("[TCP Client] 连接成功");
+                                _logger.Information("TCP客户端连接成功");
                                 await HandleTcpClientReceive(_cts.Token);
                             }
                             else
                             {
-                                _logger.Error("[TCP Client] 连接超时，5秒后重试...");
+                                _logger.Error("TCP客户端连接超时，5秒后重试...");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"[TCP Client] 错误: {ex.Message}，5秒后重试...");
+                        _logger.Error($"TCP客户端错误: {ex.Message}，5秒后重试...");
                     }
 
                     await Task.Delay(5000, _cts.Token);

@@ -12,7 +12,6 @@ namespace aoi_common.Services
         /// 获取当前的实例
         /// </summary>
         CogAcqFifoTool CurrentCogAcqFifoTool { get; }
-
         /// <summary>
         /// 获取当前的 ICogAcqFifo 接口
         /// </summary>
@@ -25,10 +24,12 @@ namespace aoi_common.Services
         /// 从文件加载相机配置
         /// </summary>
         Task<bool> LoadConfigAsync(string configPath);
-        Task<bool> SaveConfigAsync(string configPath);
-        string GetDefaultConfigPath();
-        bool IsReady();
 
+        Task<bool> SaveConfigAsync(string configPath);
+        
+        string GetDefaultConfigPath();
+        
+        bool IsReady();
         /// <summary>
         /// 启动采集  非阻塞
         /// PLC触发或用户点击
@@ -71,7 +72,7 @@ namespace aoi_common.Services
                     if (image != null)
                     {
                         _logger.Information("已获取图像");
-                        OnImageCaptured?.Invoke(image);
+                        //OnImageCaptured?.Invoke(image);
                     }
                     else
                     {
@@ -200,7 +201,6 @@ namespace aoi_common.Services
                 return false;
             }
         }
-
 
         public string GetDefaultConfigPath()
         {

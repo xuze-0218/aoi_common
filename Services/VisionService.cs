@@ -57,6 +57,7 @@ namespace aoi_common.Services
             }
         }
 
+
         private void HandleImageCaptured(ICogImage image)
         {
             if (image == null)
