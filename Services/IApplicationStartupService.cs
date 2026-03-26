@@ -14,7 +14,6 @@ namespace aoi_common.Services
     public class ApplicationStartupService : IApplicationStartupService
     {
         private readonly IDetectionSessionService _detectionSessionService;
-        private readonly IMessageParsingService _detectionLogicService;
         private readonly ICommunicationService _communicationService;
         private readonly ICameraConfigService _cameraConfigService;
         private readonly IVisionService _visionService;
@@ -22,12 +21,11 @@ namespace aoi_common.Services
 
         public ApplicationStartupService(ICameraConfigService cameraConfigService, IVisionService visionService,
             ICommunicationService communicationService, IParametersConfigService configService, ILogger logger,
-            IMessageParsingService detectionLogicService, IDetectionSessionService detectionSessionService)
+            IDetectionSessionService detectionSessionService)
         {
             _cameraConfigService = cameraConfigService;
             _visionService = visionService;
             _logger = logger;
-            _detectionLogicService = detectionLogicService;
             _communicationService = communicationService;
             _detectionSessionService = detectionSessionService;
         }
@@ -79,7 +77,6 @@ namespace aoi_common.Services
                         var result = await _detectionSessionService.StartDetectionSessionAsync(message);
                         _logger.Information("检测会话完成: Success={Success}, Message={Message}",
                             result.IsSuccess, result.Message);
-                        //_detectionLogicService.ParsePlcData(message);
                     }
                     catch (Exception ex)
                     {
