@@ -202,6 +202,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Common\BoolToColorConverter.cs" />
+    <Compile Include="Common\IsListeningToBrushConverter.cs" />
     <Compile Include="Common\UiLogSink.cs" />
     <Compile Include="Events\ICogImageDisplayEvent.cs" />
     <Compile Include="Events\ToolBlockCompletedEvent.cs" />

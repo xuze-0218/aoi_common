@@ -14,9 +14,10 @@ using System.Threading.Tasks;
 
 namespace aoi_common.ViewModels
 {
-    public class ProtocolConfigViewModel: BindableBase,IDialogAware
+    public class ProtocolConfigViewModel : BindableBase, IDialogAware
     {
         private readonly IProtocolEngineService _protocolEngine;
+        private readonly ICommunicationService _communicationService;
         private readonly ILogger _logger;
 
         private string _configPath = Path.Combine(
@@ -32,6 +33,8 @@ namespace aoi_common.ViewModels
         private string _previewMessage = "";
         private string _statusMessage = "就绪";
         private string _templateName = "DefaultTemplate";
+        private bool _isListeningPlc = false;  // 
+        private string _listenButtonText = "开始监听 PLC";  //
 
         public event Action<IDialogResult> RequestClose;
 
@@ -89,6 +92,19 @@ namespace aoi_common.ViewModels
             set => SetProperty(ref _templateName, value);
         }
 
+        // ✅ 新增属性
+        public bool IsListeningPlc
+        {
+            get => _isListeningPlc;
+            set => SetProperty(ref _isListeningPlc, value);
+        }
+
+        public string ListenButtonText
+        {
+            get => _listenButtonText;
+            set => SetProperty(ref _listenButtonText, value);
+        }
+
         // 命令
         public DelegateCommand AddInputFieldCommand { get; private set; }
         public DelegateCommand AddOutputFieldCommand { get; private set; }
@@ -97,16 +113,23 @@ namespace aoi_common.ViewModels
         public DelegateCommand PreviewOutputCommand { get; private set; }
         public DelegateCommand SaveConfigCommand { get; private set; }
         public DelegateCommand LoadConfigCommand { get; private set; }
+        public DelegateCommand ToggleListenCommand { get; private set; }
 
-        public string Title =>"报文配置调试";
+        public string Title => "报文配置调试";
 
-        public ProtocolConfigViewModel(IProtocolEngineService protocolEngine, ILogger logger)
+
+        public ProtocolConfigViewModel(
+            IProtocolEngineService protocolEngine,
+            ICommunicationService communicationService,
+            ILogger logger)
         {
             _protocolEngine = protocolEngine;
+            _communicationService = communicationService;
             _logger = logger;
 
             InitializeCollections();
             InitializeCommands();
+            SubscribeToCommunicationEvents();
             LoadConfig();
 
             _logger?.Information("ProtocolConfigViewModel 已初始化");
@@ -169,6 +192,63 @@ namespace aoi_common.ViewModels
             PreviewOutputCommand = new DelegateCommand(() => ExecutePreviewOutput());
             SaveConfigCommand = new DelegateCommand(() => ExecuteSaveConfig());
             LoadConfigCommand = new DelegateCommand(() => LoadConfig());
+
+            ToggleListenCommand = new DelegateCommand(() => ToggleListen());
+        }
+
+        /// <summary>
+        /// 订阅通讯服务事件
+        /// </summary>
+        private void SubscribeToCommunicationEvents()
+        {
+            _communicationService.MessageReceived += (sender, message) =>
+            {
+                if (IsListeningPlc)
+                {
+                    App.Current?.Dispatcher.Invoke(() =>
+                    {
+                        try
+                        {
+                            _logger?.Debug("从 {Sender} 接收到消息: {Message}", sender, message);
+                            TestRawData = message;
+                            ExecuteParseTest();
+
+                            PreviewMessage = "已自动解析来自 PLC 的消息";
+                            _logger?.Information("自动解析 PLC 消息成功");
+                        }
+                        catch (Exception ex)
+                        {
+                            PreviewMessage = $"自动解析失败: {ex.Message}";
+                            _logger?.Error(ex, "自动解析 PLC 消息失败");
+                        }
+                    });
+                }
+            };
+
+            _logger?.Debug("已订阅通讯服务事件");
+        }
+
+        /// <summary>
+        ///切换监听 PLC
+        /// </summary>
+        private void ToggleListen()
+        {
+            IsListeningPlc = !IsListeningPlc;
+
+            if (IsListeningPlc)
+            {
+                ListenButtonText = "🎧 停止监听 PLC";
+                StatusMessage = "正在监听 PLC 消息...";
+                PreviewMessage = "✅ 已开始监听，等待 PLC 发送电文";
+                _logger?.Information("已开始监听 PLC");
+            }
+            else
+            {
+                ListenButtonText = "🎧 开始监听 PLC";
+                StatusMessage = "已停止监听";
+                PreviewMessage = "⏸️ 已停止监听";
+                _logger?.Information("已停止监听 PLC");
+            }
         }
 
         /// <summary>
@@ -204,7 +284,8 @@ namespace aoi_common.ViewModels
                 }
 
                 ParseResult = result.ToString();
-                PreviewMessage = "电文解析完成";
+                if (!IsListeningPlc)  // 只在手动测试时更新消息
+                    PreviewMessage = "电文解析完成";
                 StatusMessage = "解析测试成功";
 
                 // 更新输出预览（使用刚解析的变量）
@@ -249,12 +330,8 @@ namespace aoi_common.ViewModels
             try
             {
                 var outputList = OutputFields.OrderBy(f => f.Index).ToList();
-
-                // 生成预览
                 string message = _protocolEngine.BuildOutput(outputList);
                 GeneratedMessage = message;
-
-                // 更新各字段的 Preview 属性
                 foreach (var field in outputList)
                 {
                     if (field.Source == FieldSource.Fixed)
@@ -364,15 +441,21 @@ namespace aoi_common.ViewModels
             TotalLength = OutputFields.Sum(f => f.Length);
         }
 
-        public bool CanCloseDialog()=> true;
+        public bool CanCloseDialog() => true;
 
         public void OnDialogClosed()
         {
-           
+            // 关闭对话框时停止监听
+            if (IsListeningPlc)
+            {
+                IsListeningPlc = false;
+                _logger?.Debug("对话框关闭，已停止监听 PLC");
+            }
         }
 
         public void OnDialogOpened(IDialogParameters parameters)
         {
+            _logger?.Debug("ProtocolConfigView 对话框已打开");
         }
     }
 }
