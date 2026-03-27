@@ -1,5 +1,6 @@
 ﻿using Serilog;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace aoi_common.Services
@@ -157,12 +158,18 @@ namespace aoi_common.Services
             try
             {
 
-                if (_backgroundInitializationTask != null)
+                if (_backgroundInitializationTask != null && !_backgroundInitializationTask.IsCompleted)
                 {
                     _logger.Debug("等待后台初始化任务完成...");
                     try
                     {
-                        await Task.WhenAny(_backgroundInitializationTask, Task.Delay(TimeSpan.FromSeconds(3)));
+                        using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                        {
+                            await Task.WhenAll(
+                                _backgroundInitializationTask,
+                                Task.Delay(Timeout.Infinite, cts.Token)
+                            );
+                        }
                     }
                     catch (Exception ex)
                     {

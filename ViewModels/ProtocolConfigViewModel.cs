@@ -319,6 +319,13 @@ namespace aoi_common.ViewModels
             try
             {
                 var outputList = OutputFields.OrderBy(f => f.Index).ToList();
+                foreach (var field in outputList.Where(f => f.Source == FieldSource.Variable))
+                {
+                    if (string.IsNullOrEmpty(_protocolEngine.GetVariable(field.Name)))
+                    {
+                        _protocolEngine.SetVariable(field.Name, "0");
+                    }
+                }
                 string message = _protocolEngine.BuildOutput(outputList);
                 GeneratedMessage = message;
                 foreach (var field in outputList)
@@ -331,7 +338,7 @@ namespace aoi_common.ViewModels
                     {
                         string val = _protocolEngine.GetVariable(field.Name);
                         if (string.IsNullOrEmpty(val))
-                            val = field.FixedValue;
+                            val = "0";
 
                         if (field.Scale != 1.0 && double.TryParse(val, out double d))
                         {
