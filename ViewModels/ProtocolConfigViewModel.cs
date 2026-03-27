@@ -423,6 +423,32 @@ namespace aoi_common.ViewModels
         private void OnFieldsChanged()
         {
             UpdateTotalLength();
+            SyncFieldValues(InputFields);
+            SyncFieldValues(OutputFields);
+        }
+
+        private void SyncFieldValues(ObservableCollection<ProtocolField> fields)
+        {
+            try
+            {
+                foreach (var field in fields)
+                {
+                    if (field.Source == FieldSource.Fixed)
+                    {
+                        // Fixed 类型：用 Name 的值赋给 FixedValue
+                        if (!string.IsNullOrEmpty(field.Name))
+                        {
+                            field.FixedValue = field.Name;
+                            _logger?.Debug("同步 Fixed 字段: Name={Name} → FixedValue={Value}",
+                                field.Name, field.FixedValue);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex, "同步字段值异常");
+            }
         }
 
         private void UpdateTotalLength()
