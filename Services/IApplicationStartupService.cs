@@ -1,5 +1,4 @@
-﻿using aoi_common.Models;
-using Serilog;
+﻿using Serilog;
 using System;
 using System.Threading.Tasks;
 
