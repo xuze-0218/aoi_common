@@ -4,6 +4,7 @@ using Prism.Events;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -48,30 +49,34 @@ namespace aoi_common.Services
     public class DetectionSessionService : IDetectionSessionService
     {
         private readonly IVisionService _visionService;
-        private readonly IMessageParsingService _messageParsingService;
+        //private readonly IMessageParsingService _messageParsingService;
+        private readonly IProtocolEngineService _protocolEngine;
         private readonly ICommunicationService _communicationService;
         private readonly IParametersConfigService _config;
         private readonly IEventAggregator _eventAggregator;
         private readonly ILogger _logger;
 
+        private FullProtocolConfig _protocolConfig;
+        private string _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config/ProtocolConfig.json");
         private DetectionResultModel _currentSessionResult;
         private string _currentPlcData;
         private TaskCompletionSource<DetectionResultModel> _sessionCompletionSource;
-        private ProtocolParse _currentProtocolParse;
         private DetectionSessionType _currentSessionType = DetectionSessionType.Online;
         private DetectionSessionState _currentState = DetectionSessionState.Idle;
         public DetectionSessionState CurrentState => _currentState;
 
         public DetectionSessionService(
             IVisionService visionService,
-            IMessageParsingService messageParsingService,
+            IProtocolEngineService protocolEngine,
+            //IMessageParsingService messageParsingService,
             ICommunicationService communicationService,
             IParametersConfigService config,
             IEventAggregator eventAggregator,
             ILogger logger)
         {
             _visionService = visionService;
-            _messageParsingService = messageParsingService;
+            //_messageParsingService = messageParsingService;
+            _protocolEngine = protocolEngine;
             _communicationService = communicationService;
             _config = config;
             _eventAggregator = eventAggregator;
@@ -79,7 +84,22 @@ namespace aoi_common.Services
 
             // 订阅ToolBlock完成事件
             _eventAggregator.GetEvent<ToolBlockCompletedEvent>().Subscribe(OnToolBlockCompleted, ThreadOption.BackgroundThread);
+            LoadProtocolConfig();
             _logger.Information("检测会话服务已初始化");
+        }
+
+        private void LoadProtocolConfig()
+        {
+            try
+            {
+                _protocolConfig = ConfigStorage.Load(_configPath);
+                _logger.Information("报文配置已加载");
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "加载报文配置失败，使用默认配置");
+                _protocolConfig = new FullProtocolConfig();
+            }
         }
 
         /// <summary>
@@ -262,8 +282,13 @@ namespace aoi_common.Services
                 _logger.Debug("原始PLC报文长度: {Length}", plcData?.Length ?? 0);
 
                 //解析报文并提取参数
-                _currentSessionResult = _messageParsingService.ParsePlcData(plcData);
-                _currentProtocolParse = new ProtocolParse(plcData);
+                var parseResult = ParseAndValidatePlcData(plcData);
+                if (!parseResult.IsSuccess)
+                {
+                    _currentState = DetectionSessionState.Idle;
+                    return parseResult;
+                }
+                _currentSessionResult = parseResult;
 
                 _logger.Debug(" PLC报文已解析 - ItemCode={ItemCode}, Message={Message}",
                     _currentSessionResult.ItemCode, _currentSessionResult.Message);
@@ -577,6 +602,82 @@ namespace aoi_common.Services
             }
         }
 
+
+        private DetectionResultModel ParseAndValidatePlcData(string rawPlcData)
+        {
+            var result = new DetectionResultModel { IsSuccess = false };
+            var logs = new List<string> { $"接收数据长度: {rawPlcData?.Length ?? 0}" };
+
+            try
+            {
+                _protocolEngine.ClearVariables();
+
+                if (_protocolConfig.InputFields == null || _protocolConfig.InputFields.Count == 0)
+                {
+                    logs.Add("未加载报文配置");
+                }
+
+                _protocolEngine.ParseInput(rawPlcData, _protocolConfig.InputFields);
+
+                // 业务逻辑判断：标定 vs 检测
+                string calibOrDetectStr = _protocolEngine.GetVariable("CalibOrDetect");
+                string funcCodeStr = _protocolEngine.GetVariable("FuncCode");
+
+                if (!int.TryParse(calibOrDetectStr, out int calibOrDetect))
+                    calibOrDetect = 0;
+                if (!int.TryParse(funcCodeStr, out int funcCode))
+                    funcCode = 0;
+
+                logs.Add($"功能码: {funcCode}, 标定/检测: {calibOrDetect}");
+
+                // 功能码 2003 是标定，3003 是检测
+                if (funcCode == 2003)
+                {
+                    //result.DetectionMode = DetectionMode.Calibration;
+                    logs.Add("检测模式: 标定");
+                }
+                else if (funcCode == 3003)
+                {
+                    //result.DetectionMode = DetectionMode.Detection;
+                    logs.Add("检测模式: 检测");
+
+                    string productType1Str = _protocolEngine.GetVariable("ProductType1");
+                    string productType2Str = _protocolEngine.GetVariable("ProductType2");
+
+                    if (int.TryParse(productType1Str, out int productType1))
+                    {
+                        result.ItemCode = productType1;
+                        logs.Add($"产品类型1: {productType1}");
+                    }
+                }
+                else
+                {
+                    logs.Add($"❌ 功能码异常: {funcCode}");
+                    result.Message = $"功能码异常: {funcCode}";
+                    result.DetailedCode = string.Join(Environment.NewLine, logs);
+                    return result;
+                }
+
+                // ✅ 获取图像名称
+                string imageName = _protocolEngine.GetVariable("ImageName");
+                result.PictureName = imageName;
+                logs.Add($"图像名称: {imageName}");
+
+                result.IsSuccess = true;
+                result.Message = "电文验证成功";
+            }
+            catch (Exception ex)
+            {
+                logs.Add($"❌ 解析异常: {ex.Message}");
+                result.Message = $"电文解析异常: {ex.Message}";
+                _logger.Error(ex, "电文解析失败");
+            }
+
+            result.DetailedCode = string.Join(Environment.NewLine, logs);
+            return result;
+        }
+
+
         //private bool DetectComplexFilm()
         //{
         //    if (_config.GetInt("输入参数", "cellOrNot") == 0)
@@ -588,7 +689,7 @@ namespace aoi_common.Services
         //    double inRadio = _config.GetDouble("输入参数", "inRadio");//0.059
         //    double filmArea = 11111 * Math.Pow(inRadio, 2);// 面胶膜颜色,从vpp获取
         //    double cellRealArea = area* Math.Pow(inRadio, 2);
-       
+
         //    double allowDeviation = _config.GetDouble("参数设置", "%允许面积偏差%");
         //    double cellBlueArea = _config.GetDouble("参数设置", "%电芯蓝膜面积%");
         //    double singleTapeArea = _config.GetDouble("参数设置", "%单个胶条面积%");

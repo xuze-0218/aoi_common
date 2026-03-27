@@ -27,7 +27,7 @@ namespace aoi_common
             //通讯服务
             containerRegistry.RegisterSingleton<ICommunicationService, CommunicationService>();
             //报文解析
-            containerRegistry.RegisterSingleton<IMessageParsingService, MessageParsingService>();
+            //containerRegistry.RegisterSingleton<IMessageParsingService, MessageParsingService>();
             //参数配置
             containerRegistry.RegisterSingleton<IParametersConfigService, ParametersConfigService>();
             // 注册Vision服务

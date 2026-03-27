@@ -212,7 +212,6 @@
     <Compile Include="Models\DetectionSessionState.cs" />
     <Compile Include="Models\ParametersConfig.cs" />
     <Compile Include="Models\ProtocolField.cs" />
-    <Compile Include="Models\ProtocolParse.cs" />
     <Compile Include="Models\DetectionResultModel.cs" />
     <Compile Include="Models\LogEventModel.cs" />
     <Compile Include="Models\ToolBlockResultModel.cs" />
