@@ -188,7 +188,7 @@ namespace aoi_common.Services
                 {
                     visionDisposable.Dispose();
                 }
-                await Task.Delay(300);
+                await Task.Delay(500);
 
                 //保存相机配置
                 _logger.Debug("保存相机配置");

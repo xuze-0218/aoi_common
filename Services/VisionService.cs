@@ -33,7 +33,7 @@ namespace aoi_common.Services
         void RunToolWithImage(ICogImage image);
     }
 
-    public class VisionService : IVisionService
+    public class VisionService : IVisionService, IDisposable
     {
         private bool _isInitialized;
         public bool IsInitialized => _isInitialized;
@@ -367,17 +367,49 @@ namespace aoi_common.Services
                 }
             }
         }
-        
+
+
+        public void Dispose()
+        {
+            try
+            {
+                if (toolBlock != null)
+                {
+                    toolBlock.Ran -= toolBlock_Ran; 
+                    toolBlock.Dispose();
+                    toolBlock = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex, "释放ToolBlock异常");
+            }
+
+            try
+            {
+                if (_cameraService != null)
+                {
+                    _cameraService.OnImageCaptured -= HandleImageCaptured;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex, "释放相机服务异常");
+            }
+
+            try
+            {
+                _imageFileTool?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex, "释放ImageFileTool异常");
+            }
+        }
+
         ~VisionService()
         {
-            if (toolBlock!=null)
-            {
-                toolBlock.Dispose();
-            }
-            if (_cameraService != null)
-            {
-                _cameraService.OnImageCaptured -= HandleImageCaptured;
-            }
+            Dispose();
         }
     }
 }

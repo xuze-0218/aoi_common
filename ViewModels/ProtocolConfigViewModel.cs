@@ -8,6 +8,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace aoi_common.ViewModels
 {
@@ -318,45 +319,45 @@ namespace aoi_common.ViewModels
         {
             try
             {
-                var outputList = OutputFields.OrderBy(f => f.Index).ToList();
-                foreach (var field in outputList.Where(f => f.Source == FieldSource.Variable))
-                {
-                    if (string.IsNullOrEmpty(_protocolEngine.GetVariable(field.Name)))
-                    {
-                        _protocolEngine.SetVariable(field.Name, "0");
-                    }
-                }
-                string message = _protocolEngine.BuildOutput(outputList);
-                GeneratedMessage = message;
+                var outputList = OutputFields.OrderBy(f => f.Index).ToList();             
+                var sb = new StringBuilder();
+
                 foreach (var field in outputList)
                 {
+                    string fieldContent = "";
+
                     if (field.Source == FieldSource.Fixed)
                     {
-                        field.Preview = field.FixedValue;
+                        fieldContent = field.FixedValue ?? "";
                     }
                     else if (field.Source == FieldSource.Variable)
                     {
-                        string val = _protocolEngine.GetVariable(field.Name);
-                        if (string.IsNullOrEmpty(val))
-                            val = "0";
+                        fieldContent = _protocolEngine.GetVariable(field.Name); 
 
-                        if (field.Scale != 1.0 && double.TryParse(val, out double d))
+                        if (!string.IsNullOrEmpty(fieldContent) && field.Scale != 1.0 &&
+                            double.TryParse(fieldContent, out double d))
                         {
-                            val = Math.Round(d * field.Scale).ToString();
+                            fieldContent = Math.Round(d * field.Scale).ToString();
                         }
-
-                        // 对齐显示
-                        field.Preview = val.Length > field.Length
-                            ? val.Substring(0, field.Length)
-                            : val.PadLeft(field.Length, '0');
                     }
                     else if (field.Source == FieldSource.Padding)
                     {
-                        field.Preview = new string('0', field.Length);
+                        fieldContent = "";
                     }
+
+                    int actualLength = field.GetActualLength(_protocolEngine.VariablePool);
+                    string alignedContent = fieldContent.Length > actualLength
+                        ? fieldContent.Substring(0, actualLength)
+                        : fieldContent.PadLeft(actualLength, '0');
+
+                    field.Preview = alignedContent;
+                    sb.Append(alignedContent);
+
+                    _logger?.Debug("预览 {FieldName}: {Preview}", field.Name, field.Preview);
                 }
 
-                _logger?.Debug("输出预览已更新，长度: {Length}", message.Length);
+                GeneratedMessage = sb.ToString();
+                _logger?.Debug("输出预览已更新，长度: {Length}", GeneratedMessage.Length);
             }
             catch (Exception ex)
             {
