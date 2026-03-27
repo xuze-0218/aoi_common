@@ -6,6 +6,7 @@ using Prism.DryIoc;
 using Prism.Ioc;
 using Serilog;
 using System;
+using System.Threading;
 using System.Windows;
 
 namespace aoi_common
@@ -15,6 +16,8 @@ namespace aoi_common
     /// </summary>
     public partial class App : PrismApplication
     {
+        private static Mutex _singleInstanceMutex;
+        private const string MutexName = "aoi_common_mutex";
         protected override Window CreateShell()
         {
             return Container.Resolve<MainView>();
@@ -35,7 +38,7 @@ namespace aoi_common
             // 注册应用启动服务
             containerRegistry.RegisterSingleton<IApplicationStartupService, ApplicationStartupService>();
             //相机调试
-            containerRegistry.RegisterDialog<CameraDebugView, CameraDebugViewModel>(); 
+            containerRegistry.RegisterDialog<CameraDebugView, CameraDebugViewModel>();
             //程序调试
             containerRegistry.RegisterDialog<AlgorithmDebugView, AlgorithmDebugViewModel>();
             //参数配置逻辑
@@ -45,7 +48,7 @@ namespace aoi_common
             //注册检测会话服务(检测逻辑)
             containerRegistry.RegisterSingleton<IDetectionSessionService, DetectionSessionService>();
             //报文解析服务
-            containerRegistry.RegisterSingleton<IProtocolEngineService,ProtocolEngineService>();
+            containerRegistry.RegisterSingleton<IProtocolEngineService, ProtocolEngineService>();
 
             //报文解析
             containerRegistry.RegisterDialog<ProtocolConfigView, ProtocolConfigViewModel>();
@@ -74,7 +77,7 @@ namespace aoi_common
                 Log.Fatal(ex, "应用启动失败");
                 MessageBox.Show("应用初始化失败: " + ex.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
-            }          
+            }
         }
 
         protected override void OnExit(ExitEventArgs e)
@@ -82,6 +85,7 @@ namespace aoi_common
             base.OnExit(e);
             try
             {
+               
                 var startupService = Container.Resolve<IApplicationStartupService>();
                 startupService.ShutdownAsync().Wait();
             }
@@ -89,8 +93,36 @@ namespace aoi_common
             {
                 Log.Error(ex, "应用关闭时保存配置失败");
             }
+            if (_singleInstanceMutex != null)
+            {
+                try
+                {
+                    _singleInstanceMutex.ReleaseMutex();
+                    _singleInstanceMutex.Dispose();
+                    _singleInstanceMutex = null;
+                }
+                catch { }
+            }
 
             Log.CloseAndFlush();
+        }
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            bool isNewInstance = false;
+            _singleInstanceMutex = new Mutex(true, MutexName, out isNewInstance);
+
+            if (!isNewInstance)
+            {
+                MessageBox.Show("应用已在运行，无法启动新实例！",
+                    "警告",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                this.Shutdown();
+                return;
+            }
+
+            base.OnStartup(e);
         }
     }
 }
