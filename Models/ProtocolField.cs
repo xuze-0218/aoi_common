@@ -27,7 +27,7 @@ namespace aoi_common.Models
         private string _preview = "";
         private LengthType _lengthType = LengthType.Fixed;
         private string _lengthSourceField = "";  // 长度来源字段名（如 "CodeLength"）
-        private int _lengthOffset = 0;           // 长度偏移
+        private int _lengthOffset = 0;          
         // ====== 通用字段 ======
         /// <summary>
         /// 排序索引（输出侧用于确定电文中的位置）
