@@ -434,7 +434,6 @@ namespace aoi_common.ViewModels
 
         public void OnDialogClosed()
         {
-            // 关闭对话框时停止监听
             if (IsListeningPlc)
             {
                 IsListeningPlc = false;
