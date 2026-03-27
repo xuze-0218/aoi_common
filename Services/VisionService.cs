@@ -367,7 +367,7 @@ namespace aoi_common.Services
                 }
             }
         }
-
+        
         ~VisionService()
         {
             if (_cameraService != null)

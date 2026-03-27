@@ -19,6 +19,11 @@ namespace aoi_common.Services
         private readonly IVisionService _visionService;
         private readonly ILogger _logger;
 
+        /// <summary>
+        /// 记录后台初始化任务，确保在应用关闭时可以等待其完成或安全取消
+        /// </summary>
+        private Task _backgroundInitializationTask;
+
         public ApplicationStartupService(ICameraConfigService cameraConfigService, IVisionService visionService,
             ICommunicationService communicationService, IParametersConfigService configService, ILogger logger,
             IDetectionSessionService detectionSessionService)
@@ -40,7 +45,7 @@ namespace aoi_common.Services
                 await InitializeCommunicationAsync();
                 //加载相机配置  //加载vpp文件
 
-                _ = Task.Run(async () =>
+                _backgroundInitializationTask = Task.Run(async () =>
                 {
                     try
                     {
@@ -152,6 +157,20 @@ namespace aoi_common.Services
         {
             try
             {
+
+                if (_backgroundInitializationTask != null)
+                {
+                    _logger.Debug("等待后台初始化任务完成...");
+                    try
+                    {
+                        await Task.WhenAny(_backgroundInitializationTask, Task.Delay(TimeSpan.FromSeconds(3)));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning(ex, "等待后台初始化任务失败");
+                    }
+                }
+
                 //停止通讯
                 _logger.Debug("停止通讯服务");
                 _communicationService?.Stop();

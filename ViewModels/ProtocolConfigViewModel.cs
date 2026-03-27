@@ -425,6 +425,7 @@ namespace aoi_common.ViewModels
             UpdateTotalLength();
             SyncFieldValues(InputFields);
             SyncFieldValues(OutputFields);
+            UpdateOutputPreview();
         }
 
         private void SyncFieldValues(ObservableCollection<ProtocolField> fields)
