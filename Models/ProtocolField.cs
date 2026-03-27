@@ -64,7 +64,7 @@ namespace aoi_common.Models
         }
 
         /// <summary>
-        /// 缩放因子（仅 Variable 生效，用于处理浮点数）
+        /// 缩放因子（仅Variable生效,用于处理浮点数）
         /// 例如：1.24 * 1000 = 1240
         /// </summary>
         public double Scale
