@@ -236,7 +236,7 @@ namespace aoi_common.Services
 
             try
             {
-                _logger.Information("本地测试,共{Count}张图像", imageSource.TotalCount);
+                _logger.Information("本地测试共{Count}张图像", imageSource.TotalCount);
                 imageSource.Reset();
 
                 while (imageSource.HasNext())
