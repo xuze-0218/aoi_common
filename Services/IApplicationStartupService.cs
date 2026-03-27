@@ -150,20 +150,43 @@ namespace aoi_common.Services
 
         public async Task ShutdownAsync()
         {
-            _logger.Information("应用关闭，保存相机配置");
-
             try
             {
+                //停止通讯
+                _logger.Debug("停止通讯服务");
+                _communicationService?.Stop();
+                await Task.Delay(300);
+
+                // 关闭VPP
+                _logger.Debug("关闭 Vision 服务");
+                if (_visionService is IDisposable visionDisposable)
+                {
+                    visionDisposable.Dispose();
+                }
+                await Task.Delay(300);
+
+                //保存相机配置
+                _logger.Debug("保存相机配置");
                 string defaultConfigPath = _cameraConfigService.GetDefaultConfigPath();
-                if (_cameraConfigService.CurrentCogAcqFifoTool.Operator == null)
-                    return;
-                await _cameraConfigService.SaveConfigAsync(defaultConfigPath);
-                _logger.Information("相机配置已保存");
-                await Task.CompletedTask;
+                if (_cameraConfigService?.CurrentCogAcqFifoTool?.Operator != null)
+                {
+                    await _cameraConfigService.SaveConfigAsync(defaultConfigPath);
+                    _logger.Information("相机配置已保存");
+                }
+
+                //释放相机资源
+                _logger.Debug("释放相机资源");
+                if (_cameraConfigService is IDisposable cameraDisposable)
+                {
+                    cameraDisposable.Dispose();
+                }
+                await Task.Delay(500);
+
+                _logger.Information("========== 应用关闭流程完成 ==========");
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "保存相机配置失败");
+                _logger.Error(ex, "应用关闭过程中出错");
             }
         }
     }

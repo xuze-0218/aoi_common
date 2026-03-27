@@ -133,7 +133,7 @@ namespace aoi_common.Services
                     _currentSessionResult.Message = $"ToolBlock运行失败: {toolBlockResult.ErrorMessage}";
                     if (_currentSessionType == DetectionSessionType.Online)
                     {
-                        SendResultToPlc(_currentSessionResult);
+                        _ = SendResultToPlcAsync(_currentSessionResult);
                     }
                     _currentState = DetectionSessionState.Failed;
                     _sessionCompletionSource?.TrySetResult(_currentSessionResult);
@@ -155,7 +155,7 @@ namespace aoi_common.Services
                 //发送PLC结果
                 if (_currentSessionType == DetectionSessionType.Online)
                 {
-                    SendResultToPlc(_currentSessionResult);
+                   _ = SendResultToPlcAsync(_currentSessionResult);
                     _logger.Debug("已发送PLC结果");
                 }
                 else
@@ -390,13 +390,13 @@ namespace aoi_common.Services
         /// <summary>
         /// 发送结果给PLC
         /// </summary>
-        private void SendResultToPlc(DetectionResultModel result)
+        private async Task SendResultToPlcAsync(DetectionResultModel result)
         {
             try
             {
                 if (!string.IsNullOrEmpty(result.SendPlcMessage))
                 {
-                    _communicationService.SendAsync(result.SendPlcMessage);
+                    await _communicationService.SendAsync(result.SendPlcMessage);
                     _logger.Information("已发送PLC回复报文 (长度: {Length})", result.SendPlcMessage.Length);
                 }
                 else
