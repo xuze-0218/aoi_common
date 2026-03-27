@@ -2,8 +2,17 @@
 using System.Collections.Generic;
 namespace aoi_common.Models
 {
-    // 字段来源：固定文本、变量池映射、空白填充
-    public enum FieldSource { Fixed, Variable, Padding }
+    public enum FieldSource
+    {
+        Fixed, //固定文本
+        Variable, //变量池映射
+        Padding  //空白填充
+    }
+    public enum LengthType
+    {
+        Fixed,      // 固定长度
+        Dynamic     // 动态长度（从其他字段获取）
+    }
 
     public class ProtocolField : BindableBase
     {
@@ -16,7 +25,9 @@ namespace aoi_common.Models
         private int _startIndex;  // 仅用于输入侧
         private string _description = "";
         private string _preview = "";
-
+        private LengthType _lengthType = LengthType.Fixed;
+        private string _lengthSourceField = "";  // 长度来源字段名（如 "CodeLength"）
+        private int _lengthOffset = 0;           // 长度偏移
         // ====== 通用字段 ======
         /// <summary>
         /// 排序索引（输出侧用于确定电文中的位置）
@@ -45,7 +56,7 @@ namespace aoi_common.Models
             set => SetProperty(ref _source, value);
         }
 
-     
+
         public int Length
         {
             get => _length;
@@ -84,22 +95,58 @@ namespace aoi_common.Models
             set => SetProperty(ref _startIndex, value);
         }
 
-      
+
         public string Description
         {
             get => _description;
             set => SetProperty(ref _description, value);
         }
 
-        // ====== 预览字段 ======
         /// <summary>
         /// 预览：根据当前变量池内容显示预期的字段值
-        /// 只读，由 ViewModel 计算维护
         /// </summary>
         public string Preview
         {
             get => _preview;
             set => SetProperty(ref _preview, value);
+        }
+
+        public LengthType LengthType
+        {
+            get => _lengthType;
+            set => SetProperty(ref _lengthType, value);
+        }
+
+        // 长度来源字段名（如 "CodeLength"）
+        public string LengthSourceField
+        {
+            get => _lengthSourceField;
+            set => SetProperty(ref _lengthSourceField, value);
+        }
+
+        // 长度偏移
+        public int LengthOffset
+        {
+            get => _lengthOffset;
+            set => SetProperty(ref _lengthOffset, value);
+        }
+
+        /// <summary>
+        /// 如果是动态长度，从变量池查询；否则返回 Fixed 长度
+        /// </summary>
+        /// <returns></returns>
+        public int GetActualLength(Dictionary<string, string> variablePool)
+        {
+            if (LengthType == LengthType.Dynamic && !string.IsNullOrEmpty(LengthSourceField))
+            {
+                if (variablePool.TryGetValue(LengthSourceField, out string lengthStr) &&
+                    int.TryParse(lengthStr, out int dynamicLength))
+                {
+                    return dynamicLength + LengthOffset;
+                }
+                return LengthOffset;
+            }
+            return Length;
         }
     }
 

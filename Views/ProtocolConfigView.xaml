@@ -8,8 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mo="clr-namespace:aoi_common.Models"
     xmlns:prism="http://prismlibrary.com/"
-    d:DesignHeight="600"
-    d:DesignWidth="800"
+    d:DesignHeight="800"
+    d:DesignWidth="1400"
     prism:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -18,6 +18,9 @@
             <Setter Property="RowHeight" Value="28" />
         </Style>
         <common:IsListeningToBrushConverter x:Key="IsListeningToBrushConverter" />
+        <common:LengthTypeForegroundConverter x:Key="LengthTypeForegroundConverter" />
+        <common:IsLengthTypeDynamicConverter x:Key="IsLengthTypeDynamicConverter" />
+
     </UserControl.Resources>
     <Grid
         MaxHeight="700"
@@ -70,13 +73,6 @@
                 FontSize="11"
                 Text="{Binding TemplateName}"
                 ToolTip="当前配置模板的名称" />
-            <Button
-                Padding="8,4"
-                HorizontalAlignment="Right"
-                Command="{Binding CloseDialogCommand}"
-                Content="关闭"
-                FontSize="11"
-                ToolTip="关闭此对话框" />
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="0,5,0,5">
@@ -160,25 +156,164 @@
                         CanUserDeleteRows="False"
                         ItemsSource="{Binding InputFields}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn
-                                Width="*"
-                                Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                Header="变量名" />
+                            <DataGridTemplateColumn Width="80" Header="变量名">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding Name}"
+                                            ToolTip="字段在变量池中的名称" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox
+                                            Padding="3"
+                                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="字段在变量池中的名称" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
 
-                            <DataGridTextColumn
-                                Width="50"
-                                Binding="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}"
-                                Header="起始位" />
+                            <!--  起始位  -->
+                            <DataGridTemplateColumn Width="50" Header="起始位">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding StartIndex}"
+                                            TextAlignment="Center"
+                                            ToolTip="原始电文中的起始位置（从0开始）" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox
+                                            Padding="3"
+                                            Text="{Binding StartIndex, UpdateSourceTrigger=PropertyChanged}"
+                                            TextAlignment="Center"
+                                            ToolTip="原始电文中的起始位置（从0开始）" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
 
-                            <DataGridTextColumn
-                                Width="45"
-                                Binding="{Binding Length, UpdateSourceTrigger=PropertyChanged}"
-                                Header="长度" />
+                            <!--  长度类型 下拉框  -->
+                            <DataGridTemplateColumn Width="70" Header="长度类型">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding LengthType}"
+                                            TextAlignment="Center"
+                                            ToolTip="Fixed=固定长度, Dynamic=从其他字段动态获取" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <ComboBox
+                                            Padding="3"
+                                            SelectedItem="{Binding LengthType, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="Fixed=固定长度, Dynamic=从其他字段动态获取">
+                                            <System:String xmlns:System="clr-namespace:System;assembly=mscorlib">Fixed</System:String>
+                                            <System:String xmlns:System="clr-namespace:System;assembly=mscorlib">Dynamic</System:String>
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
 
-                            <DataGridTextColumn
-                                Width="80"
-                                Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                                Header="说明" />
+                            <!--  长度 Fixed 时使用  -->
+                            <DataGridTemplateColumn Width="50" Header="长度">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding Length}"
+                                            TextAlignment="Center"
+                                            ToolTip="当长度类型=Fixed时，此为字段长度" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox
+                                            Padding="3"
+                                            Text="{Binding Length, UpdateSourceTrigger=PropertyChanged}"
+                                            TextAlignment="Center"
+                                            ToolTip="当长度类型=Fixed时，此为字段长度" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!--  长度源字段 Dynamic 时使用  -->
+                            <DataGridTemplateColumn Width="100" Header="长度源字段">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="5,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{Binding LengthType, Converter={StaticResource LengthTypeForegroundConverter}}"
+                                            Text="{Binding LengthSourceField}"
+                                            ToolTip="当长度类型=Dynamic时，输入长度来源的字段名（如CodeLength）" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox
+                                            Padding="3"
+                                            IsEnabled="{Binding LengthType, Converter={StaticResource IsLengthTypeDynamicConverter}}"
+                                            Text="{Binding LengthSourceField, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="当长度类型=Dynamic时，输入长度来源的字段名（如CodeLength）" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!--  长度偏移  -->
+                            <DataGridTemplateColumn Width="70" Header="长度偏移">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding LengthOffset}"
+                                            TextAlignment="Center"
+                                            ToolTip="长度的偏移调整值（可选，通常为0）" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox
+                                            Padding="3"
+                                            Text="{Binding LengthOffset, UpdateSourceTrigger=PropertyChanged}"
+                                            TextAlignment="Center"
+                                            ToolTip="长度的偏移调整值（可选，通常为0）" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!--  说明  -->
+                            <DataGridTemplateColumn Width="80" Header="说明">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="5,0"
+                                            VerticalAlignment="Center"
+                                            Text="{Binding Description}"
+                                            TextTrimming="CharacterEllipsis"
+                                            ToolTip="{Binding Description}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <TextBox
+                                            Padding="3"
+                                            Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="字段说明" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
 
                             <DataGridTemplateColumn Width="40" Header="删除">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -389,7 +524,7 @@
                                     Background="#F9F9F9"
                                     BorderThickness="0"
                                     FontFamily="Courier New"
-                                    FontSize="9"
+                                    FontSize="11"
                                     IsReadOnly="True"
                                     Text="{Binding ParseResult, Mode=OneWay}"
                                     TextWrapping="Wrap"

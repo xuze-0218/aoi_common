@@ -53,10 +53,11 @@ namespace aoi_common.Services
 
             try
             {
+                var sortedFields = inputConfig.OrderBy(f => f.StartIndex).ToList();
                 foreach (var field in inputConfig)
                 {
                     int start = field.StartIndex;
-                    int length = field.Length;
+                    int length = field.GetActualLength(VariablePool);
 
                     // 边界检查
                     if (start < 0 || length <= 0)
@@ -73,7 +74,6 @@ namespace aoi_common.Services
                         continue;
                     }
 
-                    //直接截取字符串，不做类型转换
                     string value = rawData.Substring(start, length).Trim();
                     VariablePool[field.Name] = value;
 
@@ -100,16 +100,15 @@ namespace aoi_common.Services
             try
             {
                 var sb = new StringBuilder();
-
-                // 关键：严格按 Index 从小到大排序
+                //严格按 Index 从小到大排序
                 var sortedFields = outputConfig.OrderBy(f => f.Index).ToList();
 
                 foreach (var field in sortedFields)
                 {
                     string rawContent = GetFieldContent(field);
-
+                    int actualLength = field.GetActualLength(VariablePool);
                     // 强制长度对齐：不足补'0'，超出截断
-                    string alignedContent = AlignContent(rawContent, field.Length);
+                    string alignedContent = AlignContent(rawContent, actualLength);
                     sb.Append(alignedContent);
 
                     _logger?.Debug("字段 {FieldName} → '{Content}' (长度: {Length})",
@@ -128,18 +127,16 @@ namespace aoi_common.Services
         }
 
         /// <summary>
-        /// 获取字段内容（根据来源）
+        /// 获取字段内容
         /// </summary>
         private string GetFieldContent(ProtocolField field)
         {
             switch (field.Source)
             {
-                case FieldSource.Fixed:
-                    // 固定值直接返回
+                case FieldSource.Fixed:  // 固定值直接返回
                     return field.FixedValue ?? "";
 
-                case FieldSource.Variable:
-                    // 从变量池取值
+                case FieldSource.Variable:// 从变量池取值
                     if (VariablePool.TryGetValue(field.Name, out string val))
                     {
                         //处理缩放：float 1.24 * 1000 → "1240"
@@ -151,9 +148,7 @@ namespace aoi_common.Services
                     }
                     // 变量不存在，使用默认值
                     return field.FixedValue ?? "";
-
-                case FieldSource.Padding:
-                    // 填充模式返回空，长度对齐会补齐
+                case FieldSource.Padding:  // 填充模式返回空，长度对齐会补齐
                     return "";
 
                 default:

@@ -5,12 +5,9 @@ using Prism.Mvvm;
 using Prism.Services.Dialogs;
 using Serilog;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace aoi_common.ViewModels
 {
@@ -20,10 +17,7 @@ namespace aoi_common.ViewModels
         private readonly ICommunicationService _communicationService;
         private readonly ILogger _logger;
 
-        private string _configPath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory,
-            "Config/ProtocolConfig.json");
-
+        private string _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config/ProtocolConfig.json");
         private ObservableCollection<ProtocolField> _inputFields;
         private ObservableCollection<ProtocolField> _outputFields;
         private int _totalLength;
@@ -33,8 +27,8 @@ namespace aoi_common.ViewModels
         private string _previewMessage = "";
         private string _statusMessage = "就绪";
         private string _templateName = "DefaultTemplate";
-        private bool _isListeningPlc = false;  // 
-        private string _listenButtonText = "开始监听 PLC";  //
+        private bool _isListeningPlc = false;
+        private string _listenButtonText = "开始监听 PLC";
 
         public event Action<IDialogResult> RequestClose;
 
@@ -92,7 +86,6 @@ namespace aoi_common.ViewModels
             set => SetProperty(ref _templateName, value);
         }
 
-        // ✅ 新增属性
         public bool IsListeningPlc
         {
             get => _isListeningPlc;
@@ -192,7 +185,6 @@ namespace aoi_common.ViewModels
             PreviewOutputCommand = new DelegateCommand(() => ExecutePreviewOutput());
             SaveConfigCommand = new DelegateCommand(() => ExecuteSaveConfig());
             LoadConfigCommand = new DelegateCommand(() => LoadConfig());
-
             ToggleListenCommand = new DelegateCommand(() => ToggleListen());
         }
 
@@ -237,16 +229,16 @@ namespace aoi_common.ViewModels
 
             if (IsListeningPlc)
             {
-                ListenButtonText = "🎧 停止监听 PLC";
+                ListenButtonText = "停止监听 PLC";
                 StatusMessage = "正在监听 PLC 消息...";
-                PreviewMessage = "✅ 已开始监听，等待 PLC 发送电文";
+                PreviewMessage = "已开始监听，等待 PLC 发送电文";
                 _logger?.Information("已开始监听 PLC");
             }
             else
             {
-                ListenButtonText = "🎧 开始监听 PLC";
+                ListenButtonText = "开始监听 PLC";
                 StatusMessage = "已停止监听";
-                PreviewMessage = "⏸️ 已停止监听";
+                PreviewMessage = "已停止监听";
                 _logger?.Information("已停止监听 PLC");
             }
         }
@@ -284,13 +276,10 @@ namespace aoi_common.ViewModels
                 }
 
                 ParseResult = result.ToString();
-                if (!IsListeningPlc)  // 只在手动测试时更新消息
+                if (!IsListeningPlc) 
                     PreviewMessage = "电文解析完成";
                 StatusMessage = "解析测试成功";
-
-                // 更新输出预览（使用刚解析的变量）
                 UpdateOutputPreview();
-
                 _logger?.Information("电文解析测试完成");
             }
             catch (Exception ex)
@@ -323,7 +312,7 @@ namespace aoi_common.ViewModels
         }
 
         /// <summary>
-        /// 更新输出预览（内部方法）
+        /// 更新输出预览
         /// </summary>
         private void UpdateOutputPreview()
         {
