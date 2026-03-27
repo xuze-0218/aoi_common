@@ -12,7 +12,7 @@ namespace aoi_common.Services
     {
         Dictionary<string, string> VariablePool { get; }
         /// <summary>
-        /// 解析输入电文：根据配置的 Offset 和 Length 截取并存入变量池
+        /// 解析输入电文
         /// </summary>
         /// <param name="rawData"></param>
         /// <param name="inputConfig"></param>
