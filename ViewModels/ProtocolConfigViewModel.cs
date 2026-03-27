@@ -134,8 +134,17 @@ namespace aoi_common.ViewModels
             InputFields = new ObservableCollection<ProtocolField>();
             OutputFields = new ObservableCollection<ProtocolField>();
 
-            InputFields.CollectionChanged += (s, e) => OnFieldsChanged();
-            OutputFields.CollectionChanged += (s, e) => OnFieldsChanged();
+            InputFields.CollectionChanged += (s, e) =>
+            {
+                UpdateTotalLength();
+                SyncFieldValues(InputFields);
+            };
+
+            OutputFields.CollectionChanged += (s, e) =>
+            {
+                UpdateTotalLength();
+                SyncFieldValues(OutputFields);
+            };
         }
 
         private void InitializeCommands()
@@ -162,10 +171,9 @@ namespace aoi_common.ViewModels
                     Source = FieldSource.Variable,
                     Length = 4,
                     Scale = 1.0,
-                    FixedValue = "0"
                 };
                 OutputFields.Add(newField);
-                UpdateTotalLength();
+                //UpdateTotalLength();
                 UpdateOutputPreview();
                 StatusMessage = "已添加输出字段";
             });
@@ -428,13 +436,7 @@ namespace aoi_common.ViewModels
             }
         }
 
-        private void OnFieldsChanged()
-        {
-            UpdateTotalLength();
-            SyncFieldValues(InputFields);
-            SyncFieldValues(OutputFields);
-            UpdateOutputPreview();
-        }
+      
 
         private void SyncFieldValues(ObservableCollection<ProtocolField> fields)
         {
