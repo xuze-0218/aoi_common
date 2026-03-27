@@ -370,6 +370,10 @@ namespace aoi_common.Services
         
         ~VisionService()
         {
+            if (toolBlock!=null)
+            {
+                toolBlock.Dispose();
+            }
             if (_cameraService != null)
             {
                 _cameraService.OnImageCaptured -= HandleImageCaptured;
